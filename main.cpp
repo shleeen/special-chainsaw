@@ -29,21 +29,15 @@ struct Solution{
 };
 
 
-// -- Function declarations
-float assesIndividual(float individual[18], Agent& bee1, Agent& bee2);
-void breed();
-void mutate();
-void fitnessRankBased(Solution population[POP_SIZE]);
-
-
 /***
  * 
  * AGENT CLASS
  * 
 ***/
 class Agent {
+    private:
+        CTRNN c;
     public:
-        CTRNN c(int newsize = NEURONS);
         // int flag = 0; //0 is sender, 1 is receiver?
         
         float self_position; 
@@ -60,14 +54,8 @@ class Agent {
             // input to neuron 1
 
         Agent(){
-            for (int i=1; i<=NEURONS; i++){
-                c().SetNeuronTimeConstant(i, 0.0);
-                c().SetNeuronBias(i, 0.0);
-                c().SetNeuronGain(i, 0.0);
-                c().SetConnectionWeight(i, 1, 0.0);
-                c().SetConnectionWeight(i, 2, 0.0);
-                c().SetConnectionWeight(i, 3, 0.0);
-            }
+            c.SetCircuitSize(3);
+
             self_position = 0.0;
             contact_sensor = 0.0;
             target_sensor = 0.0;
@@ -81,33 +69,33 @@ class Agent {
             int offset = 0; // 3+3=6
 
             for (int i=1; i<=NEURONS; i++){
-                c().SetNeuronTimeConstant(i, genome[offset]);
-                c().SetNeuronBias(i, genome[offset+1]);
-                c().SetNeuronGain(i, genome[offset+2]);
-                c().SetConnectionWeight(i, 1, genome[offset+3]);
-                c().SetConnectionWeight(i, 2, genome[offset+4]);
-                c().SetConnectionWeight(i, 3, genome[offset+5]);
+                c.SetNeuronTimeConstant(i, genome[offset]);
+                c.SetNeuronBias(i, genome[offset+1]);
+                c.SetNeuronGain(i, genome[offset+2]);
+                c.SetConnectionWeight(i, 1, genome[offset+3]);
+                c.SetConnectionWeight(i, 2, genome[offset+4]);
+                c.SetConnectionWeight(i, 3, genome[offset+5]);
                 offset += 6;
             }
 
             //set neuron external input
-            c().SetNeuronExternalInput(1, contact_sensor);
-            c().SetNeuronExternalInput(1, motor);
-            c().SetNeuronExternalInput(2, target_sensor);
-            c().SetNeuronExternalInput(3, self_position);
+            c.SetNeuronExternalInput(1, contact_sensor);
+            c.SetNeuronExternalInput(1, motor);
+            c.SetNeuronExternalInput(2, target_sensor);
+            c.SetNeuronExternalInput(3, self_position);
         }
 
         void updateAgentParams(float genome[GENES]);
 
         // Run the one step of the circuit !! (lol)
         void runAgent(){
-            c().RandomizeCircuitState(-0.5,0.5); //should this still be random?
-            c().EulerStep(STEP_SIZE);
+            c.RandomizeCircuitState(-0.5,0.5); //should this still be random?
+            c.EulerStep(STEP_SIZE);
         }
 
         // change the self position of agent
         void moveAgent(float new_location){
-            c().SetNeuronExternalInput(3, self_position);
+            c.SetNeuronExternalInput(3, self_position);
         }
 
         void updateExternalInput(){
@@ -120,12 +108,12 @@ void Agent::updateAgentParams(float genome[GENES]){
     int offset = 0; // 3+3=6
 
     for (int i=1; i<=NEURONS; i++){
-        c().SetNeuronTimeConstant(i, genome[offset]);
-        c().SetNeuronBias(i, genome[offset+1]);
-        c().SetNeuronGain(i, genome[offset+2]);
-        c().SetConnectionWeight(i, 1, genome[offset+3]);
-        c().SetConnectionWeight(i, 2, genome[offset+4]);
-        c().SetConnectionWeight(i, 3, genome[offset+5]);
+        c.SetNeuronTimeConstant(i, genome[offset]);
+        c.SetNeuronBias(i, genome[offset+1]);
+        c.SetNeuronGain(i, genome[offset+2]);
+        c.SetConnectionWeight(i, 1, genome[offset+3]);
+        c.SetConnectionWeight(i, 2, genome[offset+4]);
+        c.SetConnectionWeight(i, 3, genome[offset+5]);
         offset += 6;
     }
 
@@ -159,7 +147,7 @@ void init_population(Solution (&population)[POP_SIZE]){
 
 
 // generates the fitness scores
-float assesIndividual(float individual[18], Agent& bee1, Agent& bee2){
+float assesIndividual(float individual[18], Agent &bee1, Agent &bee2){
     int trials = 0; //this aint gonna change
     while (trials < 20){
         // draw target
@@ -257,8 +245,8 @@ void fitnessRankBased(Solution population[POP_SIZE]){
 ***/
 int main(int argc, char* argv[]){
 
-    Agent bee1(); //sender
-    Agent bee2(); //receiver
+    Agent bee1; //sender
+    Agent bee2; //receiver
     int STOP_CND = 0;
 
     // initialize population
