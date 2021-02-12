@@ -29,7 +29,10 @@ struct Solution{
 
 
 // -- Function declarations
-float assesPopulation(float individual[18]);
+float assesIndividual(float individual[18], Agent& bee1, Agent& bee2);
+void breed();
+void mutate();
+void fitnessRankBased(Solution population[POP_SIZE]);
 
 
 // -- Agent class
@@ -40,6 +43,21 @@ class Agent {
         float contact_sensor; //inpput to neuron 1
         float target_sensor; //input to neuron 2
         float motor; // input to neuron 1
+
+        Agent(){
+            for (int i=1; i<=NEURONS; i++){
+                c().SetNeuronTimeConstant(i, 0.0);
+                c().SetNeuronBias(i, 0.0);
+                c().SetNeuronGain(i, 0.0);
+                c().SetConnectionWeight(i, 1, 0.0);
+                c().SetConnectionWeight(i, 2, 0.0);
+                c().SetConnectionWeight(i, 3, 0.0);
+            }
+            self_position = 0.0;
+            contact_sensor = 0.0;
+            target_sensor = 0,0;
+            motor = 0.0;
+        }
 
         //constructor
         //decode the genome & set the agent up with the params
@@ -110,11 +128,6 @@ class Agent {
 
 // chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33
 
-// struct Solution{
-//     float genome[GENES];
-//     float fitness_score;
-// };
-
 void init_population(Solution (&population)[POP_SIZE]){
     srand((unsigned int)time(NULL));
 
@@ -130,49 +143,54 @@ void init_population(Solution (&population)[POP_SIZE]){
 
 
 
-int main(int argc, char* argv[])
-{
-    cout<<"in main"<<endl;
+int main(int argc, char* argv[]){
 
     Agent bee1();
     Agent bee2();
+    int STOP_CND = 0;
 
-    // array<int, 5>
-    // gene g1;
-    // gene test[NEURONS] = {0,0,0};
-    // cout<<test[0] << test[1] << test[2]<<endl;
-    // gene *res = create_genotype(test);
-    // cout<<res[0] << res[1] << res[2]<<endl;
-
-    // initialize population?
+    // initialize population
     Solution population[POP_SIZE];
     init_population(population);
     
     // assess population
-    // Solution ne;
+        // for indv in population
+            // assess(indv)
     for (int i=0; i<POP_SIZE; i++){
-        float cur_fitness = assesPopulation(population[i].genome);
+        float cur_fitness = assesIndividual(population[i].genome, bee1, bee2);
         population[i].fitness_score = cur_fitness;
     }
-    // for all in population
-            // assess(indv)
-    // loop: repeat until stopping condition
-        // breed()
-        // mutate()
-        // asses()
 
-    // ??
-    // end of generation
-        //  solutions selected using a rank-based system
-        // The selection of the parents depends on the rank of each individual and not the fitness.
-        // The higher ranked individuals are preferred more than the lower ranked ones.
-    
+    while(STOP_CND < 10){     // loop: repeat until stopping condition
+        // breed
+        breed();
+
+        // mutate
+        mutate();
+
+        //assess
+        for (int i=0; i<POP_SIZE; i++){
+            float cur_fitness = assesIndividual(population[i].genome, bee1, bee2);
+            population[i].fitness_score = cur_fitness;
+        }
+
+
+        // end of generation
+            //  solutions selected using a rank-based system
+            // The selection of the parents depends on the rank of each individual and not the fitness.
+            // The higher ranked individuals are preferred more than the lower ranked ones.
+        fitnessRankBased(population);
+
+        STOP_CND++;
+    }
+
+
     return 0;
 }
 
 
 // generates the fitness scores
-float assesPopulation(float individual[18], Agent &bee1, Agent &bee2){
+float assesIndividual(float individual[18], Agent& bee1, Agent& bee2){
     int trials = 0; //this aint gonna change
     while (trials < 20){
         // draw target
@@ -203,7 +221,7 @@ float assesPopulation(float individual[18], Agent &bee1, Agent &bee2){
             bee2.runAgent();
 
             // update location of c1 - based on motor neuron output
-            // calc values to update??
+            // send absolute location
             bee1.moveAgent();
             bee2.moveAgent();
         }
@@ -252,3 +270,18 @@ void mutate(){
     // to find: mutation rate
 }
 
+void fitnessRankBased(Solution population[POP_SIZE]){
+    float fitness_list[POP_SIZE];
+    for (int k=0; k<POP_SIZE; k++){
+        fitness_list[k] = population[k].fitness_score;
+    }
+}
+
+/*
+
+// struct Solution{
+//     float genome[GENES];
+//     float fitness_score;
+// };
+
+*/
