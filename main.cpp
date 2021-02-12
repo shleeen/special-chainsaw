@@ -19,7 +19,8 @@ const int GENES = (NEURONS+3)*NEURONS;
 const int POP_SIZE = 10;
 
 const double RUN_DURATION = 250; //what unit is this?
-const double STEP_SIZE = 0.01; //same^^
+const double STEP_SIZE = 0.1; // 0.01
+const float SPEED = 0.01; //"units per time unit"
 
 
 struct Solution{
@@ -35,14 +36,28 @@ void mutate();
 void fitnessRankBased(Solution population[POP_SIZE]);
 
 
-// -- Agent class
+/***
+ * 
+ * AGENT CLASS
+ * 
+***/
 class Agent {
     public:
         CTRNN c(int newsize = NEURONS);
-        float self_position; //input to neuron 3
-        float contact_sensor; //inpput to neuron 1
-        float target_sensor; //input to neuron 2
-        float motor; // input to neuron 1
+        // int flag = 0; //0 is sender, 1 is receiver?
+        
+        float self_position; 
+            //input to neuron 3
+            // absolute location along the 1D environment.
+        float contact_sensor; 
+            //inpput to neuron 1
+            // discrete signal - on (1) if the agent is in contact with the other agent and is off (0) otherwise
+        float target_sensor; 
+            //input to neuron 2
+            // a relative measure of the sender’s distance to the target.
+            // The receiver also has this sensor, but its value is fixed to -1.
+        float motor; 
+            // input to neuron 1
 
         Agent(){
             for (int i=1; i<=NEURONS; i++){
@@ -55,7 +70,7 @@ class Agent {
             }
             self_position = 0.0;
             contact_sensor = 0.0;
-            target_sensor = 0,0;
+            target_sensor = 0.0;
             motor = 0.0;
         }
 
@@ -82,52 +97,54 @@ class Agent {
             c().SetNeuronExternalInput(3, self_position);
         }
 
-        void updateAgentParams(float genome[GENES]){
-            int offset = 0; // 3+3=6
-
-            for (int i=1; i<=NEURONS; i++){
-                c().SetNeuronTimeConstant(i, genome[offset]);
-                c().SetNeuronBias(i, genome[offset+1]);
-                c().SetNeuronGain(i, genome[offset+2]);
-                c().SetConnectionWeight(i, 1, genome[offset+3]);
-                c().SetConnectionWeight(i, 2, genome[offset+4]);
-                c().SetConnectionWeight(i, 3, genome[offset+5]);
-                offset += 6;
-            }
-
-            //set neuron external input
-            c().SetNeuronExternalInput(1, contact_sensor);
-            c().SetNeuronExternalInput(1, motor);
-            c().SetNeuronExternalInput(2, target_sensor);
-            c().SetNeuronExternalInput(3, self_position);
-        }
-
+        void updateAgentParams(float genome[GENES]);
 
         // Run the one step of the circuit !! (lol)
         void runAgent(){
             c().RandomizeCircuitState(-0.5,0.5); //should this still be random?
-            // cout << 0.0 << " " << c().NeuronOutput(1) << " " << c().NeuronOutput(2) << endl;
-
-            // move for loop outside maybe???
-            // for (double time = STEP_SIZE; time <= RUN_DURATION; time += STEP_SIZE) {
-                c().EulerStep(STEP_SIZE);
-                // cout << time << " " << c().NeuronOutput(1) << " " << c().NeuronOutput(2) << endl;
-            // }
+            c().EulerStep(STEP_SIZE);
         }
 
-        void moveAgent(){
-            // update the agent location
-            // sensors, motor neurons and location
+        // change the self position of agent
+        void moveAgent(float new_location){
+            c().SetNeuronExternalInput(3, self_position);
         }
 
         void updateExternalInput(){
-
+            // contact sensor length 0.2 units
+            // on (1) if the agent is in contact with the other agent and is off (0) otherwise.
         }
 };
 
+void Agent::updateAgentParams(float genome[GENES]){
+    int offset = 0; // 3+3=6
 
+    for (int i=1; i<=NEURONS; i++){
+        c().SetNeuronTimeConstant(i, genome[offset]);
+        c().SetNeuronBias(i, genome[offset+1]);
+        c().SetNeuronGain(i, genome[offset+2]);
+        c().SetConnectionWeight(i, 1, genome[offset+3]);
+        c().SetConnectionWeight(i, 2, genome[offset+4]);
+        c().SetConnectionWeight(i, 3, genome[offset+5]);
+        offset += 6;
+    }
+
+    //set neuron external input
+    // c().SetNeuronExternalInput(1, contact_sensor);
+    // c().SetNeuronExternalInput(1, motor);
+    // c().SetNeuronExternalInput(2, target_sensor);
+    // c().SetNeuronExternalInput(3, self_position);
+}
+
+
+
+
+/***
+ * 
+ * GA FUNCTIONS
+ * 
+***/
 // chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33
-
 void init_population(Solution (&population)[POP_SIZE]){
     srand((unsigned int)time(NULL));
 
@@ -137,55 +154,7 @@ void init_population(Solution (&population)[POP_SIZE]){
         }
         population[i].fitness_score = 0;
     }
-    
     cout<<"created population :)"<<endl;
-}
-
-
-
-int main(int argc, char* argv[]){
-
-    Agent bee1();
-    Agent bee2();
-    int STOP_CND = 0;
-
-    // initialize population
-    Solution population[POP_SIZE];
-    init_population(population);
-    
-    // assess population
-        // for indv in population
-            // assess(indv)
-    for (int i=0; i<POP_SIZE; i++){
-        float cur_fitness = assesIndividual(population[i].genome, bee1, bee2);
-        population[i].fitness_score = cur_fitness;
-    }
-
-    while(STOP_CND < 10){     // loop: repeat until stopping condition
-        // breed
-        breed();
-
-        // mutate
-        mutate();
-
-        //assess
-        for (int i=0; i<POP_SIZE; i++){
-            float cur_fitness = assesIndividual(population[i].genome, bee1, bee2);
-            population[i].fitness_score = cur_fitness;
-        }
-
-
-        // end of generation
-            //  solutions selected using a rank-based system
-            // The selection of the parents depends on the rank of each individual and not the fitness.
-            // The higher ranked individuals are preferred more than the lower ranked ones.
-        fitnessRankBased(population);
-
-        STOP_CND++;
-    }
-
-
-    return 0;
 }
 
 
@@ -221,9 +190,11 @@ float assesIndividual(float individual[18], Agent& bee1, Agent& bee2){
             bee2.runAgent();
 
             // update location of c1 - based on motor neuron output
-            // send absolute location
-            bee1.moveAgent();
-            bee2.moveAgent();
+            // (send absolute location)
+            float dist = SPEED/STEP_SIZE; // this is fixed throughout??
+            float next_location = 0;
+            bee1.moveAgent(next_location);
+            // bee2.moveAgent();
         }
         
         
@@ -276,6 +247,62 @@ void fitnessRankBased(Solution population[POP_SIZE]){
         fitness_list[k] = population[k].fitness_score;
     }
 }
+
+
+
+/***
+ * 
+ * MAIN FUNCTION
+ * 
+***/
+int main(int argc, char* argv[]){
+
+    Agent bee1(); //sender
+    Agent bee2(); //receiver
+    int STOP_CND = 0;
+
+    // initialize population
+    Solution population[POP_SIZE];
+    init_population(population);
+    
+    // assess population
+        // for indv in population
+            // assess(indv)
+    for (int i=0; i<POP_SIZE; i++){
+        float cur_fitness = assesIndividual(population[i].genome, bee1, bee2);
+        population[i].fitness_score = cur_fitness;
+    }
+
+    while(STOP_CND < 10){     // loop: repeat until stopping condition
+        // breed
+        breed();
+
+        // mutate
+        mutate();
+
+        //assess
+        for (int i=0; i<POP_SIZE; i++){
+            float cur_fitness = assesIndividual(population[i].genome, bee1, bee2);
+            population[i].fitness_score = cur_fitness;
+        }
+
+
+        // end of generation
+            //  solutions selected using a rank-based system
+            // The selection of the parents depends on the rank of each individual and not the fitness.
+            // The higher ranked individuals are preferred more than the lower ranked ones.
+        fitnessRankBased(population);
+
+        STOP_CND++;
+    }
+
+
+    return 0;
+}
+
+
+
+
 
 /*
 
