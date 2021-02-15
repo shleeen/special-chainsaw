@@ -15,13 +15,22 @@ using namespace std;
 
 
 // -- Global constants
+const int NEURONS = 3;
+// const int GENES = (NEURONS+3)*NEURONS;
+
+const int GENERATIONS = 100;
+const int POP_SIZE = 10;
+
+const double RUN_DURATION = 250; //what unit is this?
+const double TIMESTEP_SIZE = 0.1; // 0.01
+const float SPEED = 0.01; //"units per time unit"
 
 
+// chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33
 struct Individual{
-    float genome[GENES];
-    float fitness_score;
+    float genome[GENES]; //aka Chromosome, Genotype
+    float fitness;
 };
-
 
 
 /***
@@ -29,8 +38,6 @@ struct Individual{
  * GA FUNCTIONS
  * 
 ***/
-// chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33
-
 void init_population(Individual (&population)[POP_SIZE]){
     srand((unsigned int)time(NULL));
     // TODO: range
@@ -41,14 +48,17 @@ void init_population(Individual (&population)[POP_SIZE]){
         for (int j=0; j<GENES; j++){        
             population[i].genome[j] = float(rand());
         }
-        population[i].fitness_score = 0;
+        population[i].fitness = 0;
     }
     cout<<"created population :)"<<endl;
 }
 
 
-// generates the fitness scores
-float assesIndividual(float individual[18], Agent &bee1, Agent &bee2){
+float assesIndividual(float individual[18]){
+    Agent bee1(NEURONS, GENES); //sender
+    Agent bee2(NEURONS, GENES); //receiver
+    bee2.updateTargetSensor(-1); //target sensor value for receiver is fixed
+
     int trials = 0; //this aint gonna change
     while (trials < 20){
         // draw target
@@ -60,34 +70,31 @@ float assesIndividual(float individual[18], Agent &bee1, Agent &bee2){
         std::mt19937 generator(rand_dev());
         std::uniform_real_distribution<float> distr(0.0, 0.3);
 
-        // float location1 = distr(generator);
-        // float location2 = distr(generator);
-        // cout<< " location: "<<location1<<" location 2: "<<location2<<endl;
-        bee1.self_position = distr(generator);
-        bee2.self_position = distr(generator);
+        bee1.updateSelfPosition(distr(generator));
+        bee2.updateSelfPosition(distr(generator));
 
         // SIMULATE THE BEES
         for (double time = TIMESTEP_SIZE; time <= RUN_DURATION; time += TIMESTEP_SIZE) {
             // set input values for c1 - based on where c1 is and where c2 is
             // calc values for c1
-            bee1.updateExternalInput();
-            bee2.updateExternalInput();
+            bee1.updateContactSensor(1);
+            bee2.updateContactSensor(1);
+            bee1.updateTargetSensor(1);
 
-            // do one step for each
-            bee1.runAgent();
-            bee2.runAgent();
+            // perform calc for one timestep
+            bee1.stepAgent(TIMESTEP_SIZE);
+            bee2.stepAgent(TIMESTEP_SIZE);
 
             // update location of c1 - based on motor neuron output
             // (send absolute location)
             float dist = SPEED/TIMESTEP_SIZE; // 0.01 is the biggest step
             float next_location = 0;
-            bee1.moveAgent(next_location);
+            bee1.updateSelfPosition(next_location);
             // bee2.moveAgent();
         }
         
-        
         //fitness = 1 – distance to the target
-        float fitness = 1 - (abs(bee2.self_position - target));
+        // float fitness = 1 - (abs(bee2.self_position - target));
         
         trials++;
     }
@@ -118,7 +125,7 @@ Individual mutateOffspring(Individual offspring){
 void fitnessRankBased(Individual population[POP_SIZE]){
     float fitness_list[POP_SIZE];
     for (int k=0; k<POP_SIZE; k++){
-        fitness_list[k] = population[k].fitness_score;
+        fitness_list[k] = population[k].fitness;
     }
     std::sort(fitness_list, fitness_list + POP_SIZE, std::greater<float>());
 }
@@ -136,8 +143,6 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
 ***/
 int main(int argc, char* argv[]){
 
-    Agent bee1; //sender
-    Agent bee2; //receiver
     int STOP_CND = 0;
 
     // initialize population
@@ -145,11 +150,8 @@ int main(int argc, char* argv[]){
     init_population(population);
     
     // assess population
-        // for indv in population
-            // assess(indv)
     for (int i=0; i<POP_SIZE; i++){
-        float cur_fitness = assesIndividual(population[i].genome, bee1, bee2);
-        population[i].fitness_score = cur_fitness;
+        population[i].fitness = assesIndividual(population[i].genome);
     }
 
     int gen = 0;
@@ -164,8 +166,8 @@ int main(int argc, char* argv[]){
 
             Individual mutated_offspring = mutateOffspring(offspring);
             
-            float score = assesIndividual(mutated_offspring.genome, bee1, bee2);
-            if (score > parent.fitness_score){ // does the order of insertion never matter?
+            float score = assesIndividual(mutated_offspring.genome);
+            if (score > parent.fitness){ // does the order of insertion never matter?
                 new_population[i] = mutated_offspring;
             }
             else{
@@ -187,16 +189,3 @@ int main(int argc, char* argv[]){
 
     return 0;
 }
-
-
-
-
-
-/*
-
-// struct Solution{
-//     float genome[GENES];
-//     float fitness_score;
-// };
-
-*/
