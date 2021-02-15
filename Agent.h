@@ -12,6 +12,7 @@ class Agent {
         // absolute location along the 1D environment.
         float self_position; 
         // input to neuron 1
+        // contact sensor length is 0.2 units
         // discrete signal - on (1) if the agent is in contact with the other agent and is off (0) otherwise
         int contact_sensor; 
         // input to neuron 2
@@ -29,6 +30,8 @@ class Agent {
         int getContactSensor();
         float getTargetSensor();
         float getMotor();
+        double getState(int index);
+        double getOutput(int index);
 
         void stepAgent(double timestep);
 

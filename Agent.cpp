@@ -42,13 +42,9 @@ void Agent::stepAgent(double timestep){
     c.EulerStep(timestep);
 }
 
-
 void Agent::updateContactSensor(int value){
-    // contact sensor length 0.2 units
-    // on (1) if the agent is in contact with the other agent and is off (0) otherwise.
     c.SetNeuronExternalInput(1, value);
 }
-
 
 void Agent::updateTargetSensor(float target_range){
     c.SetNeuronExternalInput(2, target_range);
@@ -58,12 +54,33 @@ void Agent::updateSelfPosition(float new_location){
     c.SetNeuronExternalInput(3, self_position);
 }
 
-
 void Agent::updateMotor(){
     // c().SetNeuronExternalInput(1, motor);
 }
 
-// Getters
+
+
+// --------- Getters
 float Agent::getSelfPosition(){
     return self_position;
+}
+
+int Agent::getContactSensor(){
+    return contact_sensor;
+}
+
+float Agent::getTargetSensor(){
+    return target_sensor;
+}
+
+float Agent::getMotor(){
+    return motor;
+}
+
+double Agent::getState(int index){
+    return c.NeuronState(index);
+}
+
+double Agent::getOutput(int index){
+    return c.NeuronOutput(index);
 }

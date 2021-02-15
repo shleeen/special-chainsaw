@@ -24,6 +24,7 @@ const int POP_SIZE = 10;
 const double RUN_DURATION = 250; //what unit is this?
 const double TIMESTEP_SIZE = 0.1; // 0.01
 const float SPEED = 0.01; //"units per time unit"
+const float DIST = SPEED/TIMESTEP_SIZE; // 0.01 is the biggest step/movement
 
 
 // chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33
@@ -54,12 +55,42 @@ void init_population(Individual (&population)[POP_SIZE]){
 }
 
 
+bool checkAgentContact(float a, float b){
+    float a_sensor_range = a + 0.2;
+    float b_location = b;
+    // if (b < a_sensor_range && ){
+
+    // }
+    // else{
+
+    // }
+    // return true;
+}
+
+
+// West <---- (._.) ----> East
+float moveAgent(Agent &agent){
+    double state = agent.getState(1); //state of motor neuron
+    float cur_location = agent.getSelfPosition();
+    if (state < 0.5){
+        // move east
+        float new_location = abs(cur_location + DIST);
+        agent.updateSelfPosition(new_location);
+    }
+    else if (state >= 0.5){
+        // move west
+        float new_location = abs(cur_location - DIST);
+        agent.updateSelfPosition(new_location);
+    }
+}
+
+
 float assesIndividual(float individual[18]){
     Agent bee1(NEURONS, GENES); //sender
     Agent bee2(NEURONS, GENES); //receiver
     bee2.updateTargetSensor(-1); //target sensor value for receiver is fixed
 
-    int trials = 0; //this aint gonna change
+    int trials = 0;
     while (trials < 20){
         // draw target
         float target = (float)(rand()) / ((float)(RAND_MAX/(0.5 - 1)));
@@ -76,21 +107,26 @@ float assesIndividual(float individual[18]){
         // SIMULATE THE BEES
         for (double time = TIMESTEP_SIZE; time <= RUN_DURATION; time += TIMESTEP_SIZE) {
             // set input values for c1 - based on where c1 is and where c2 is
-            // calc values for c1
-            bee1.updateContactSensor(1);
-            bee2.updateContactSensor(1);
-            bee1.updateTargetSensor(1);
+            bool inRange = checkAgentContact(bee1.getSelfPosition(), bee2.getSelfPosition());
+            if (inRange){
+                bee1.updateContactSensor(1);
+                bee2.updateContactSensor(0);
+            }
+            else {
+                bee2.updateContactSensor(0);
+            }
+
+            // update relative dist to target
+            float dist_to_target = abs(bee1.getSelfPosition() - target);
+            bee1.updateTargetSensor(dist_to_target);
 
             // perform calc for one timestep
             bee1.stepAgent(TIMESTEP_SIZE);
             bee2.stepAgent(TIMESTEP_SIZE);
 
             // update location of c1 - based on motor neuron output
-            // (send absolute location)
-            float dist = SPEED/TIMESTEP_SIZE; // 0.01 is the biggest step
-            float next_location = 0;
-            bee1.updateSelfPosition(next_location);
-            // bee2.moveAgent();
+            moveAgent(bee1);
+            moveAgent(bee2);
         }
         
         //fitness = 1 – distance to the target
