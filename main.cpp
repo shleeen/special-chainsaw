@@ -39,12 +39,14 @@ struct Individual{
  * 
 ***/
 // Function to generate random numbers in given range  
-// int random_num(int start, int end) 
-// { 
-//     int range = (end-start)+1; 
-//     int random_int = start+(rand()%range); 
-//     return random_int; 
-// } 
+float getRandomNumber(float start, float end) { 
+    // float range = (end-start)+1;  //why +1?
+    // float random_int = start+(rand()%range); 
+    float range = (end-start);
+    float random_int = start + ( (float)rand()/ ((float)(RAND_MAX/range)) );
+    return random_int; 
+} 
+
 
 void init_population(Individual (&population)[POP_SIZE]){
     srand((unsigned int)time(NULL));
@@ -91,6 +93,43 @@ float moveAgent(Agent &agent){
     }
 }
 
+void findRank(float array[20], float (&rank)[20]){       
+    for (int i = 0; i < 20; i++) { 
+        int r = 1, s = 1; 
+          
+        for (int j = 0; j < 20; j++) { 
+            if (j != i && array[j] < array[i]) 
+                r += 1; 
+                  
+            if (j != i && array[j] == array[i]) 
+                s += 1;      
+        }
+          
+        // Use formula to obtain rank 
+        rank[i] = r + (float)(s - 1) / (float) 2;
+    } 
+}
+
+
+// void calcRankBasedOverallFitness(Individual population[POP_SIZE], float (&overall)[POP_SIZE]){
+float calcFitnessOverTrials(float fitness_list[20]){
+    // for (int k=0; k<POP_SIZE; k++){
+    //     overall[k] = population[k].fitness;
+    // }
+    //does list need to be sorted?
+    // std::sort(fitness_overall, fitness_overall + POP_SIZE, std::greater<float>());
+
+    float final_fitness = 0.0;
+    float rank[20];
+    findRank(fitness_list, rank);
+
+    for (int k=0; k<20; k++){
+        final_fitness += fitness_list[k] * (1/rank[k]);
+    }
+
+    return final_fitness;
+}
+
 
 void assesIndividual(Individual indv){    
     Agent bee1(NEURONS, GENES); //sender
@@ -100,10 +139,11 @@ void assesIndividual(Individual indv){
     // TODO: unpack genome!!!
 
     int trials = 0;
+    float fitness_across_trials[20];
+
     while (trials < 20){
         // draw target
-        float target = (float)(rand()) / ((float)(RAND_MAX/(0.5 - 1)));
-        // cout<<"!!!!! "<< target <<endl;
+        float target = getRandomNumber(0.5, 1.0);
 
         // draw the pos of bees from a uniform random distribution in range of [0, 0.3]
         std::random_device rand_dev;
@@ -139,53 +179,42 @@ void assesIndividual(Individual indv){
         }
         
         // update fitness of indv
-        indv.fitness = 1 - (abs(bee2.getSelfPosition() - target));
+        fitness_across_trials[trials] = 1 - (abs(bee2.getSelfPosition() - target));
 
         trials++;
     }
 
     cout<<" 20 trials done. "<<endl;
+
+    // rank based fitness overall calc
+    indv.fitness = calcFitnessOverTrials(fitness_across_trials);
 }
 
-void findRank(float array[20], float (&rank)[20]){       
-    for (int i = 0; i < 20; i++) { 
-        int r = 1, s = 1; 
-          
-        for (int j = 0; j < 20; j++) { 
-            if (j != i && array[j] < array[i]) 
-                r += 1; 
-                  
-            if (j != i && array[j] == array[i]) 
-                s += 1;      
-        }
-          
-        // Use formula to obtain rank 
-        rank[i] = r + (float)(s - 1) / (float) 2;
-    } 
-}
-
-void calcRankBasedOverallFitness(Individual population[POP_SIZE], float (&overall)[POP_SIZE]){
-    for (int k=0; k<POP_SIZE; k++){
-        overall[k] = population[k].fitness;
-    }
-    //does list need to be sorted?
-    // std::sort(fitness_overall, fitness_overall + POP_SIZE, std::greater<float>());
-
-    float rank[20];
-    findRank(overall, rank);
-
-    for (int k=0; k<POP_SIZE; k++){
-        overall[k] = overall[k] * (1/rank[k]);
-    }
-}
 
 // tSearch - ? 
 // rank based selection from the overall fitness values
-Individual pickParent(Individual population[POP_SIZE]){   
+    // end of generation
+        //  solutions selected using a rank-based system
+        // The selection of the parents depends on the rank of each individual and not the fitness.
+        // The higher ranked individuals are preferred more than the lower ranked ones.
+Individual selectParent(Individual population[POP_SIZE]){   
     Individual I;
 
-    float fitness_overall[POP_SIZE];
-    calcRankBasedOverallFitness(population, fitness_overall);
+    // sum(fitnesses(population)) => S
+    // rand(0,S) => roll
+
+    // float total = 0.0;
+    // loop i from 1 to N:
+    //     running_total + fitness(i) => running_total
+    //     if running_total >= roll:
+    //     return(i)
+
+    float Sum = 0.0;
+    //sum the ranks instead of fitness here?
+    for (int i=0; i<POP_SIZE; i++){
+        Sum += population->fitness;
+    }
+    float r = getRandomNumber(0, Sum);
 
     return I;
 }
@@ -208,6 +237,7 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
         population[i] = new_pop[i];
     }
 }
+
 
 /***
  * 
@@ -234,7 +264,7 @@ int main(int argc, char* argv[]){
         for (int i=0; i<POP_SIZE; i++) {
 
             // pick parent from population
-            Individual parent = pickParent(population);
+            Individual parent = selectParent(population);
             Individual offspring = parent; //make a copy of parent
 
             Individual mutated_offspring = mutateOffspring(offspring);
@@ -249,12 +279,6 @@ int main(int argc, char* argv[]){
         }
 
         updatePopulation(population, new_population);
-
-        // end of generation
-            //  solutions selected using a rank-based system
-            // The selection of the parents depends on the rank of each individual and not the fitness.
-            // The higher ranked individuals are preferred more than the lower ranked ones.
-        // fitnessRankBased(population);
 
         cout<<"Generation "<<gen<<" complete."<<endl;
         gen++;
