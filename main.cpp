@@ -33,12 +33,19 @@ struct Individual{
     float fitness;
 };
 
-
 /***
  * 
  * GA FUNCTIONS
  * 
 ***/
+// Function to generate random numbers in given range  
+// int random_num(int start, int end) 
+// { 
+//     int range = (end-start)+1; 
+//     int random_int = start+(rand()%range); 
+//     return random_int; 
+// } 
+
 void init_population(Individual (&population)[POP_SIZE]){
     srand((unsigned int)time(NULL));
     // TODO: range
@@ -85,10 +92,12 @@ float moveAgent(Agent &agent){
 }
 
 
-float assesIndividual(float individual[18]){
+void assesIndividual(Individual indv){    
     Agent bee1(NEURONS, GENES); //sender
     Agent bee2(NEURONS, GENES); //receiver
     bee2.updateTargetSensor(-1); //target sensor value for receiver is fixed
+
+    // TODO: unpack genome!!!
 
     int trials = 0;
     while (trials < 20){
@@ -129,42 +138,70 @@ float assesIndividual(float individual[18]){
             moveAgent(bee2);
         }
         
-        //fitness = 1 – distance to the target
-        // float fitness = 1 - (abs(bee2.self_position - target));
-        
+        // update fitness of indv
+        indv.fitness = 1 - (abs(bee2.getSelfPosition() - target));
+
         trials++;
     }
 
-    cout<<"assessed individual  ";
-    return 0.0;
+    cout<<" 20 trials done. "<<endl;
 }
 
-
-// selecting the parents?
-// copying parents, to then mutate
-// tSearch - ? 
-Individual pickParent(Individual population[POP_SIZE]){   
-    // rank based selection from the overall fitness values
+void findRank(float array[20], float (&rank)[20]){       
+    for (int i = 0; i < 20; i++) { 
+        int r = 1, s = 1; 
+          
+        for (int j = 0; j < 20; j++) { 
+            if (j != i && array[j] < array[i]) 
+                r += 1; 
+                  
+            if (j != i && array[j] == array[i]) 
+                s += 1;      
+        }
+          
+        // Use formula to obtain rank 
+        rank[i] = r + (float)(s - 1) / (float) 2;
+    } 
 }
 
-
-// actually create the offsprings
-Individual mutateOffspring(Individual offspring){
-    // --  replacing offspring alleles with random alternatives
-        // Gaussian mutation with variance of 0.2
-        // for each parameter to be modified
-        // the descendant is only conserved if its performance is better than the individual selected
-    // to find: mutation rate
-}
-
-
-void fitnessRankBased(Individual population[POP_SIZE]){
-    float fitness_list[POP_SIZE];
+void calcRankBasedOverallFitness(Individual population[POP_SIZE], float (&overall)[POP_SIZE]){
     for (int k=0; k<POP_SIZE; k++){
-        fitness_list[k] = population[k].fitness;
+        overall[k] = population[k].fitness;
     }
-    std::sort(fitness_list, fitness_list + POP_SIZE, std::greater<float>());
+    //does list need to be sorted?
+    // std::sort(fitness_overall, fitness_overall + POP_SIZE, std::greater<float>());
+
+    float rank[20];
+    findRank(overall, rank);
+
+    for (int k=0; k<POP_SIZE; k++){
+        overall[k] = overall[k] * (1/rank[k]);
+    }
 }
+
+// tSearch - ? 
+// rank based selection from the overall fitness values
+Individual pickParent(Individual population[POP_SIZE]){   
+    Individual I;
+
+    float fitness_overall[POP_SIZE];
+    calcRankBasedOverallFitness(population, fitness_overall);
+
+    return I;
+}
+
+
+// replace alleles with 
+Individual mutateOffspring(Individual offspring){
+    // decode genome
+
+
+    // to find: mutation rate
+    std::default_random_engine generator;
+    std::normal_distribution<double> distribution(1.0, sqrt(0.2));
+
+}
+
 
 void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP_SIZE]){
     for (int i=0; i<POP_SIZE; i++){
@@ -187,7 +224,7 @@ int main(int argc, char* argv[]){
     
     // assess population
     for (int i=0; i<POP_SIZE; i++){
-        population[i].fitness = assesIndividual(population[i].genome);
+        assesIndividual(population[i]);
     }
 
     int gen = 0;
@@ -202,8 +239,8 @@ int main(int argc, char* argv[]){
 
             Individual mutated_offspring = mutateOffspring(offspring);
             
-            float score = assesIndividual(mutated_offspring.genome);
-            if (score > parent.fitness){ // does the order of insertion never matter?
+            assesIndividual(mutated_offspring);
+            if (mutated_offspring.fitness > parent.fitness){ // does the order of insertion never matter?
                 new_population[i] = mutated_offspring;
             }
             else{
@@ -219,6 +256,7 @@ int main(int argc, char* argv[]){
             // The higher ranked individuals are preferred more than the lower ranked ones.
         // fitnessRankBased(population);
 
+        cout<<"Generation "<<gen<<" complete."<<endl;
         gen++;
     }
 
