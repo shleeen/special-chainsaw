@@ -6,10 +6,12 @@
 #include "Agent.h"
 #include <iostream>
 #include <array>
-#include <cstdlib>
+#include <cstdlib> /* srand, rand */
 #include <ctime>
 #include <random>
 #include <algorithm>
+#include <limits>
+#include <cmath>
 
 using namespace std;
 
@@ -33,30 +35,64 @@ struct Individual{
     float fitness;
 };
 
+
+// float getRandomNumber(float start, float end, float seed=std::numeric_limits<double>::quiet_NaN()) {
+//     if (std::isnan(seed)){ //seed using time
+//         srand((unsigned int)time(NULL));
+//     }
+//     else{
+//         //seed using given number
+//     }
+
+//     // float range = (end-start)+1;  //why +1?
+//     // float random_int = start+(rand()%range); 
+//     float range = (end-start);
+//     float random_int = start + ( (float)rand()/ ((float)(RAND_MAX/range)) );
+//     return random_int; 
+// } 
+
+// Generate random number in given range from a uniform distribution
+float randomNumberUniform(float start, float end){
+  std::random_device rd;
+  std::default_random_engine eng(rd());
+  std::uniform_real_distribution<float> distr(start, end);
+  return distr(eng);
+}
+
+// Generate random number from Gaussian distr
+float randomNumberGaussian(float mean, float variance){
+  std::random_device rd;
+  std::mt19937 generator(rd());
+  std::normal_distribution<float> distr(mean, sqrt(variance));
+  return distr(generator);
+}
+
+void findRank(float array[20], float (&rank)[20]){       
+    for (int i = 0; i < 20; i++) { 
+        int r = 1, s = 1; 
+          
+        for (int j = 0; j < 20; j++) { 
+            if (j != i && array[j] < array[i]) 
+                r += 1; 
+                  
+            if (j != i && array[j] == array[i]) 
+                s += 1;      
+        }
+          
+        // Use formula to obtain rank 
+        rank[i] = r + (float)(s - 1) / (float) 2;
+    } 
+}
+
+
 /***
- * 
- * GA FUNCTIONS
- * 
+ ***   GA FUNCTIONS
 ***/
-// Function to generate random numbers in given range  
-float getRandomNumber(float start, float end) { 
-    // float range = (end-start)+1;  //why +1?
-    // float random_int = start+(rand()%range); 
-    float range = (end-start);
-    float random_int = start + ( (float)rand()/ ((float)(RAND_MAX/range)) );
-    return random_int; 
-} 
-
-
 void init_population(Individual (&population)[POP_SIZE]){
-    srand((unsigned int)time(NULL));
-    // TODO: range
-    // seed
-    // number b/w 0 and 1
-
+    // srand((unsigned int)time(NULL));
     for (int i=0; i<POP_SIZE; i++){
         for (int j=0; j<GENES; j++){        
-            population[i].genome[j] = float(rand());
+            population[i].genome[j] = randomNumberUniform(0.0, 1.0);
         }
         population[i].fitness = 0;
     }
@@ -93,22 +129,6 @@ float moveAgent(Agent &agent){
     }
 }
 
-void findRank(float array[20], float (&rank)[20]){       
-    for (int i = 0; i < 20; i++) { 
-        int r = 1, s = 1; 
-          
-        for (int j = 0; j < 20; j++) { 
-            if (j != i && array[j] < array[i]) 
-                r += 1; 
-                  
-            if (j != i && array[j] == array[i]) 
-                s += 1;      
-        }
-          
-        // Use formula to obtain rank 
-        rank[i] = r + (float)(s - 1) / (float) 2;
-    } 
-}
 
 
 // void calcRankBasedOverallFitness(Individual population[POP_SIZE], float (&overall)[POP_SIZE]){
@@ -142,22 +162,18 @@ void assesIndividual(Individual indv){
     float fitness_across_trials[20];
 
     while (trials < 20){
-        // draw target
-        float target = getRandomNumber(0.5, 1.0);
+        // draw target from uniform random distribution in range [0.5, 1.0]
+        float target = randomNumberUniform(0.5, 1.0);
 
-        // draw the pos of bees from a uniform random distribution in range of [0, 0.3]
-        std::random_device rand_dev;
-        std::mt19937 generator(rand_dev());
-        std::uniform_real_distribution<float> distr(0.0, 0.3);
-
-        bee1.updateSelfPosition(distr(generator));
-        bee2.updateSelfPosition(distr(generator));
+        // draw the pos of bees from uniform random distribution in range of [0, 0.3]
+        bee1.updateSelfPosition(randomNumberUniform(0.0, 0.3));
+        bee2.updateSelfPosition(randomNumberUniform(0.0, 0.3));
 
         // SIMULATE THE BEES
         for (double time = TIMESTEP_SIZE; time <= RUN_DURATION; time += TIMESTEP_SIZE) {
             // set input values for c1 - based on where c1 is and where c2 is
             bool inRange = checkAgentContact(bee1.getSelfPosition(), bee2.getSelfPosition());
-            if (inRange){
+            if (inRange){ 
                 bee1.updateContactSensor(1);
                 bee2.updateContactSensor(0);
             }
@@ -214,7 +230,7 @@ Individual selectParent(Individual population[POP_SIZE]){
     for (int i=0; i<POP_SIZE; i++){
         Sum += population->fitness;
     }
-    float r = getRandomNumber(0, Sum);
+    float r = randomNumberUniform(0, Sum);
 
     return I;
 }
@@ -224,10 +240,11 @@ Individual selectParent(Individual population[POP_SIZE]){
 Individual mutateOffspring(Individual offspring){
     // decode genome
 
-
     // to find: mutation rate
+
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(1.0, sqrt(0.2));
+
 
 }
 
