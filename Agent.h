@@ -35,7 +35,7 @@ class Agent {
 
         void stepAgent(double timestep);
 
-        void updateAgentParams(float genome[GENES]);
+        void updateNeuronParams(float genome[GENES]);
         void updateSelfPosition(float new_location);
         void updateContactSensor(int value);
         void updateTargetSensor(float target_range);

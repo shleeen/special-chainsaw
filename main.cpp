@@ -4,6 +4,8 @@
 
 #include "CTRNN.h"
 #include "Agent.h"
+#include "Plot.h"
+
 #include <iostream>
 #include <array>
 #include <cstdlib> /* srand, rand */
@@ -12,6 +14,7 @@
 #include <algorithm>
 #include <limits>
 #include <cmath>
+
 
 using namespace std;
 
@@ -23,11 +26,12 @@ const int NEURONS = 3;
 const int GENERATIONS = 100;
 const int POP_SIZE = 10;
 
-const double RUN_DURATION = 250; //what unit is this?
-const double TIMESTEP_SIZE = 0.1; // 0.01
+const double RUN_DURATION = 250;
+const double TIMESTEP_SIZE = 0.01; // 0.01
 const float SPEED = 0.01; //"units per time unit"
 const float DIST = SPEED/TIMESTEP_SIZE; // 0.01 is the biggest step/movement
 
+Plot p;
 
 // chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33
 struct Individual{
@@ -35,22 +39,9 @@ struct Individual{
     float fitness;
 };
 
-
-// float getRandomNumber(float start, float end, float seed=std::numeric_limits<double>::quiet_NaN()) {
-//     if (std::isnan(seed)){ //seed using time
-//         srand((unsigned int)time(NULL));
-//     }
-//     else{
-//         //seed using given number
-//     }
-
-//     // float range = (end-start)+1;  //why +1?
-//     // float random_int = start+(rand()%range); 
-//     float range = (end-start);
-//     float random_int = start + ( (float)rand()/ ((float)(RAND_MAX/range)) );
-//     return random_int; 
-// } 
-
+/***
+ ***    HELPER FUNCTIONS
+***/
 // Generate random number in given range from a uniform distribution
 float randomNumberUniform(float start, float end){
   std::random_device rd;
@@ -67,7 +58,8 @@ float randomNumberGaussian(float mean, float variance){
   return distr(generator);
 }
 
-void findRank(float array[20], float (&rank)[20]){       
+// returns rank array based on ...
+void findRank(float array[20], float (&rank)[20]){  
     for (int i = 0; i < 20; i++) { 
         int r = 1, s = 1; 
           
@@ -100,18 +92,30 @@ void init_population(Individual (&population)[POP_SIZE]){
 }
 
 
+// a & b -> location of respective agent
 bool checkAgentContact(float a, float b){
-    float a_sensor_range = a + 0.2;
-    float b_location = b;
-    // if (b < a_sensor_range && ){
+    float a_low = a - 0.2;
+    float a_high = a + 0.2;
 
-    // }
-    // else{
+    // if b is in the range of a, return true
+    if (b >= a_low && b >= a_high){
+        return true;
+    }
 
-    // }
-    // return true;
+    return false;
 }
 
+float contactAgent(Agent &agent1, Agent &agent2){
+    // if they are in range of each other, then signal is 1
+    if (checkAgentContact(agent1.getSelfPosition(), agent2.getSelfPosition())){ 
+        agent1.updateContactSensor(1);
+        agent2.updateContactSensor(1);
+    }
+    else {
+        agent1.updateContactSensor(0);
+        agent2.updateContactSensor(0);
+    }
+}
 
 // West <---- (._.) ----> East
 float moveAgent(Agent &agent){
@@ -128,7 +132,6 @@ float moveAgent(Agent &agent){
         agent.updateSelfPosition(new_location);
     }
 }
-
 
 
 // void calcRankBasedOverallFitness(Individual population[POP_SIZE], float (&overall)[POP_SIZE]){
@@ -156,7 +159,9 @@ void assesIndividual(Individual indv){
     Agent bee2(NEURONS, GENES); //receiver
     bee2.updateTargetSensor(-1); //target sensor value for receiver is fixed
 
-    // TODO: unpack genome!!!
+    // set Agent params according to the genome
+    bee1.updateNeuronParams(indv.genome);
+    bee2.updateNeuronParams(indv.genome);
 
     int trials = 0;
     float fitness_across_trials[20];
@@ -169,17 +174,12 @@ void assesIndividual(Individual indv){
         bee1.updateSelfPosition(randomNumberUniform(0.0, 0.3));
         bee2.updateSelfPosition(randomNumberUniform(0.0, 0.3));
 
+        cout<<"starting pos - > "<<bee1.getSelfPosition()<<endl;
+
         // SIMULATE THE BEES
         for (double time = TIMESTEP_SIZE; time <= RUN_DURATION; time += TIMESTEP_SIZE) {
             // set input values for c1 - based on where c1 is and where c2 is
-            bool inRange = checkAgentContact(bee1.getSelfPosition(), bee2.getSelfPosition());
-            if (inRange){ 
-                bee1.updateContactSensor(1);
-                bee2.updateContactSensor(0);
-            }
-            else {
-                bee2.updateContactSensor(0);
-            }
+            contactAgent(bee1, bee2);
 
             // update relative dist to target
             float dist_to_target = abs(bee1.getSelfPosition() - target);
@@ -192,7 +192,15 @@ void assesIndividual(Individual indv){
             // update location of c1 - based on motor neuron output
             moveAgent(bee1);
             moveAgent(bee2);
+
+            // write data to a csv file
+            // TODO: only save data of the fittest trial?
+            p.storeData(bee1.getSelfPosition(), time);
         }
+
+        p.writeCSV(trials);
+
+        cout<<"final pos: bee1 "<< bee2.getSelfPosition()<<endl;
         
         // update fitness of indv
         fitness_across_trials[trials] = 1 - (abs(bee2.getSelfPosition() - target));
@@ -214,38 +222,55 @@ void assesIndividual(Individual indv){
         // The selection of the parents depends on the rank of each individual and not the fitness.
         // The higher ranked individuals are preferred more than the lower ranked ones.
 Individual selectParent(Individual population[POP_SIZE]){   
-    Individual I;
+    float rank[POP_SIZE];
+    float prob[POP_SIZE];
 
-    // sum(fitnesses(population)) => S
-    // rand(0,S) => roll
-
-    // float total = 0.0;
-    // loop i from 1 to N:
-    //     running_total + fitness(i) => running_total
-    //     if running_total >= roll:
-    //     return(i)
+    for (int i = 0; i < POP_SIZE; i++) { 
+        int r = 1, s = 1; 
+            
+        for (int j = 0; j < POP_SIZE; j++) { 
+            if (j != i && population[j].fitness < population[i].fitness) 
+                r += 1; 
+                    
+            if (j != i && population[j].fitness == population[i].fitness) 
+                s += 1;      
+        }
+            
+        // Use formula to obtain rank 
+        rank[i] = r + (float)(s - 1) / (float) 2;
+        prob[i] = 1 / (1+rank[i]);
+    } 
 
     float Sum = 0.0;
-    //sum the ranks instead of fitness here?
+    float total = 0.0;
+
     for (int i=0; i<POP_SIZE; i++){
-        Sum += population->fitness;
+        Sum += prob[i];
     }
     float r = randomNumberUniform(0, Sum);
+    
+    int k = 0;
+    while (k <= POP_SIZE){
+        total += prob[k];
+        if (total >= r){
+            break;
+        }
+    }
 
-    return I;
+    return population[k];
 }
 
 
-// replace alleles with 
+// replace alleles with random numbers? ;-;
+// to find: mutation rate ??
 Individual mutateOffspring(Individual offspring){
-    // decode genome
+    Individual I;
+    I.fitness = 0.0;
 
-    // to find: mutation rate
-
-    std::default_random_engine generator;
-    std::normal_distribution<double> distribution(1.0, sqrt(0.2));
-
-
+    // decode genome??
+    for (int i=0; i<GENES; i++){
+        I.genome[i] = randomNumberGaussian(offspring.genome[i], sqrt(0.2));
+    }
 }
 
 
@@ -257,9 +282,7 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
 
 
 /***
- * 
- * MAIN FUNCTION
- * 
+ ***    MAIN FUNCTION
 ***/
 int main(int argc, char* argv[]){
 
@@ -300,7 +323,6 @@ int main(int argc, char* argv[]){
         cout<<"Generation "<<gen<<" complete."<<endl;
         gen++;
     }
-
 
     return 0;
 }

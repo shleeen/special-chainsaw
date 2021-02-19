@@ -18,7 +18,7 @@ Agent::Agent(int neurons, int genes){
 
 //decode the genome & set the agent up with the params
 // also set the location/motor values
-void Agent::updateAgentParams(float genome[GENES]){
+void Agent::updateNeuronParams(float genome[GENES]){
 
     // float real_values = decodeGenome();
 
@@ -43,14 +43,17 @@ void Agent::stepAgent(double timestep){
 }
 
 void Agent::updateContactSensor(int value){
-    c.SetNeuronExternalInput(1, value);
+    contact_sensor = value;
+    c.SetNeuronExternalInput(1, contact_sensor);
 }
 
 void Agent::updateTargetSensor(float target_range){
-    c.SetNeuronExternalInput(2, target_range);
+    target_sensor = target_range;
+    c.SetNeuronExternalInput(2, target_sensor);
 }
 
 void Agent::updateSelfPosition(float new_location){
+    self_position = new_location;
     c.SetNeuronExternalInput(3, self_position);
 }
 

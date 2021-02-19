@@ -68,3 +68,25 @@ void mutate(){
         // the descendant is only conserved if its performance is better than the individual selected
     // to find: mutation rate
 }
+
+
+
+/* 
+
+    SOME OLD RANDOM NUMBER CODE :)
+
+// float getRandomNumber(float start, float end, float seed=std::numeric_limits<double>::quiet_NaN()) {
+//     if (std::isnan(seed)){ //seed using time
+//         srand((unsigned int)time(NULL));
+//     }
+//     else{
+//         //seed using given number
+//     }
+
+//     // float range = (end-start)+1;  //why +1?
+//     // float random_int = start+(rand()%range); 
+//     float range = (end-start);
+//     float random_int = start + ( (float)rand()/ ((float)(RAND_MAX/range)) );
+//     return random_int; 
+// } 
+*/
