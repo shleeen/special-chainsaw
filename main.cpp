@@ -59,11 +59,15 @@ float randomNumberGaussian(float mean, float variance){
 }
 
 // returns rank array based on ...
-void findRank(float array[20], float (&rank)[20]){  
-    for (int i = 0; i < 20; i++) { 
+// void findRank(float *array, float (&rank)[20]){  
+void findRank(int size, float *array, float *rank){  
+
+    //length of array!!??
+    
+    for (int i = 0; i < size; i++) { 
         int r = 1, s = 1; 
           
-        for (int j = 0; j < 20; j++) { 
+        for (int j = 0; j < size; j++) { 
             if (j != i && array[j] < array[i]) 
                 r += 1; 
                   
@@ -144,7 +148,7 @@ float calcFitnessOverTrials(float fitness_list[20]){
 
     float final_fitness = 0.0;
     float rank[20];
-    findRank(fitness_list, rank);
+    findRank(20, fitness_list, rank);
 
     for (int k=0; k<20; k++){
         final_fitness += fitness_list[k] * (1/rank[k]);
@@ -224,6 +228,13 @@ void assesIndividual(Individual indv){
 Individual selectParent(Individual population[POP_SIZE]){   
     float rank[POP_SIZE];
     float prob[POP_SIZE];
+    float overall[POP_SIZE];
+
+    for (int k=0; k<POP_SIZE; k++){
+        overall[k] = population[k].fitness;
+    }
+
+    findRank(POP_SIZE, overall, rank);
 
     for (int i = 0; i < POP_SIZE; i++) { 
         int r = 1, s = 1; 
