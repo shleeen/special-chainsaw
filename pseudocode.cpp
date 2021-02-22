@@ -1,57 +1,119 @@
+// struct Individual:
+//      float genome[];
+//      float fitness;
 
 
-void main(){
+// main(){
+//     initialize population
+//          population = []
+//          initPopulation(population)
+//          with fitness set to 0, and genome a random number between 0 and 1
+//     for indv in population:
+//          assesIndividual(indv)
 
-    Agent bee1();
-    Agent bee2();
+//     G=0
+//     loop until G generations have been done
+//        new_pop = []
+//        for i in range POP_SIZE:
+//            selectParent() (biased towards the fitter members of pop)
+//            copy parent => offspring
+//            mutated_offspring = mutateOffspring(offspring)
+//            assessIndividual(mutated_offspring)
+//            if mutated_offspring.fitness > parent.fitness:
+//                new_pop[i] = mutated_offspring
+//            else:
+//                new_pop[i] = parent
+//            updatePopulation(population, new_pop)
+//         write out some stats 
+//         G+=1
+// }
 
-    // initialize population?
-    // assess population
-        // for all in population
-            // assess(indv)
 
-    // G=0
-    // loop until G generations have been done
-    //    new_pop = []
-    //    for i in range POP_SIZE
-    //        pick parent from pop (biased towards the fitter members of pop)
-    //        copy parent => offspring
-    //        mutate offspring => offspring
-    //        fit = assessIndividual(offspring)
-    //        if fit > parent.fitness:
-    //            new_pop[i] = offspring
-    //        else:
-    //            new_pop[i] = parent
-    //     pop = copy(new_pop) 
-    //     write out some stats 
-    //     G+=1
+// selectParent(population){
+//      rank[N], prob[N]
+//      rank[N] => rank of ith fitness of ith indv in population
+    
+//      for i in range(N):
+//          probs[i] = 1/(1+ranks[i])
+//      Sum = sum(probs)
+//      r = randomNumber(0, Sum)
+//      total = 0, i = 0
+//      while i < N:
+//          total += probs[i]
+//          if total > r:
+//              break
+//      return population[i]     
+// }
 
-    // ??
-    // end of generation
-        //  solutions selected using a rank-based system
-        // The selection of the parents depends on the rank of each individual and not the fitness.
-        // The higher ranked individuals are preferred more than the lower ranked ones.
 
-}
+// mutateOffspring(offspring){
+//      Individual new_I
+//      for genes in genome:
+//          r => random no. from Gaussian distr with mean= offspring.genome[gene], and variance = 0.2
+//          new_I.genome[gene] = r
+//      return I 
+// }
 
-// generates the fitness scores
-void asses(string individual){ 
-    // 20 trials
-        // draw random target [0.5, 1]
-        // update the network! updateAgent() for some timesteps
-            // check location, inputs 
-            // w, g, b constant thorughout whole lifetime of agent
-        // fitness = 1 – distance to the target
-            // if fitness is -ve, fitness = 0
 
-    // overall fitness:
-        // rank trials
-        // inversely weighting each score according to its rank
-        // then sum the fitness of each trial 
+// void assesIndividual(Individual indv){ 
+//      Agent bee1; //sender
+//      Agent bee2; //receiver
+//      bee2.TargetSensor = -1; //since its receiever this is fixed
 
-    // return overall fitness 
-}
+//     // set Agent params according to the genome
+//      bee1.updateNeuronParams(indv.genome);
+//      bee2.updateNeuronParams(indv.genome);
+    
+//      trials = 0
+//      fitness_across_trials[20]
+//      for trial < 20:
+//          target = randomNumber(0.5, 1)
+//          // update starting positions of both bees
+//          bee1.SelfPosition( randomNumber(0, 0.3) )
+//          bee2.SelfPosition( randomNumber(0, 0.3) )
 
+//          // run the simulation
+//          for timestep:
+//              if Bee1 is in range of Bee2:
+//                  update both contact sensors to 1
+//              else:
+//                  update both sensors to 0
+             
+//              calc distance of bee1 to target
+             
+//              EulerStep(bee1)
+//              EulerStep(bee2)
+ 
+//              moveAgent(bee1)
+//              moveAgent(bee2)
+//          fitness_across_trials[trial] = 1 – (bee2.position - target)
+//          trial++
+//     indv.fitness = rankFitnessOverTrials(fitness_across_trials)
+// }
+
+
+// updatePopulation(&population, new_pop):
+//    pop = copy(new_pop) 
+
+
+// moveAgent(agent):
+//      state = state of agent's motor neuron
+//      current_location = agent's current location
+//      if state < 0.5:
+//          new_location = current_location + 0.1
+//      else:
+//          new_location = current_location - 0.1
+//      agent.updateSelfPosition(new_location)
+
+
+// rankFitnessOverTrials(fitness_list[]):
+//     rank[20] => rank of i-th trial in fitness_list[]
+//     inversely weighting each score according to its rank
+//     then sum the fitness of each trial 
+
+
+
+// ----------------------------------------------------------------------
 // selecting the parents?
 // copying parents, to then mutate
 // tSearch - ? 
@@ -68,7 +130,6 @@ void mutate(){
         // the descendant is only conserved if its performance is better than the individual selected
     // to find: mutation rate
 }
-
 
 
 /* 

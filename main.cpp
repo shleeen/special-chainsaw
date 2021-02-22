@@ -8,13 +8,11 @@
 
 #include <iostream>
 #include <array>
-#include <cstdlib> /* srand, rand */
-#include <ctime>
 #include <random>
-#include <algorithm>
-#include <limits>
-#include <cmath>
-
+// #include <ctime>
+// #include <algorithm>
+// #include <limits>
+// #include <cmath>
 
 using namespace std;
 
@@ -27,7 +25,7 @@ const int GENERATIONS = 100;
 const int POP_SIZE = 10;
 
 const double RUN_DURATION = 250;
-const double TIMESTEP_SIZE = 0.01; // 0.01
+const double TIMESTEP_SIZE = 0.1; // or 0.01
 const float SPEED = 0.01; //"units per time unit"
 const float DIST = SPEED/TIMESTEP_SIZE; // 0.01 is the biggest step/movement
 
@@ -44,26 +42,25 @@ struct Individual{
 ***/
 // Generate random number in given range from a uniform distribution
 float randomNumberUniform(float start, float end){
-  std::random_device rd;
-  std::default_random_engine eng(rd());
-  std::uniform_real_distribution<float> distr(start, end);
-  return distr(eng);
+    std::random_device rd;
+    std::default_random_engine eng(rd());
+    std::uniform_real_distribution<float> distr(start, end);
+    return distr(eng);
 }
 
 // Generate random number from Gaussian distr
-float randomNumberGaussian(float mean, float variance){
-  std::random_device rd;
-  std::mt19937 generator(rd());
-  std::normal_distribution<float> distr(mean, sqrt(variance));
-  return distr(generator);
+float randomNumberGaussian(float mean){
+    float variance = 0.2;
+    std::random_device rd;
+    std::mt19937 generator(rd());
+    std::normal_distribution<float> distr(mean, sqrt(variance));
+    return distr(generator);
 }
 
-// returns rank array based on ...
+// find rank based on number of occurences of an element
+// rank of 1 -> smallest element, rank of N -> largest element
 // void findRank(float *array, float (&rank)[20]){  
-void findRank(int size, float *array, float *rank){  
-
-    //length of array!!??
-    
+void findRank(int size, float *array, float *rank){      
     for (int i = 0; i < size; i++) { 
         int r = 1, s = 1; 
           
@@ -75,7 +72,6 @@ void findRank(int size, float *array, float *rank){
                 s += 1;      
         }
           
-        // Use formula to obtain rank 
         rank[i] = r + (float)(s - 1) / (float) 2;
     } 
 }
@@ -125,16 +121,22 @@ float contactAgent(Agent &agent1, Agent &agent2){
 float moveAgent(Agent &agent){
     double state = agent.getState(1); //state of motor neuron
     float cur_location = agent.getSelfPosition();
+    float new_location = cur_location; //just in case? lol
     if (state < 0.5){
         // move east
         float new_location = abs(cur_location + DIST);
-        agent.updateSelfPosition(new_location);
+        // agent.updateSelfPosition(new_location);
     }
     else if (state >= 0.5){
         // move west
         float new_location = abs(cur_location - DIST);
-        agent.updateSelfPosition(new_location);
+        // agent.updateSelfPosition(new_location);
     }
+    else {
+        // float new_location = abs(cur_location - DIST);
+        cout<<"how did i get here"<<endl;
+    }
+    agent.updateSelfPosition(new_location);
 }
 
 
@@ -158,7 +160,7 @@ float calcFitnessOverTrials(float fitness_list[20]){
 }
 
 
-void assesIndividual(Individual indv){    
+void assessIndividual(Individual indv){    
     Agent bee1(NEURONS, GENES); //sender
     Agent bee2(NEURONS, GENES); //receiver
     bee2.updateTargetSensor(-1); //target sensor value for receiver is fixed
@@ -178,7 +180,7 @@ void assesIndividual(Individual indv){
         bee1.updateSelfPosition(randomNumberUniform(0.0, 0.3));
         bee2.updateSelfPosition(randomNumberUniform(0.0, 0.3));
 
-        cout<<"starting pos - > "<<bee1.getSelfPosition()<<endl;
+        // cout<<"starting pos - > "<<bee1.getSelfPosition()<<endl;
 
         // SIMULATE THE BEES
         for (double time = TIMESTEP_SIZE; time <= RUN_DURATION; time += TIMESTEP_SIZE) {
@@ -199,12 +201,12 @@ void assesIndividual(Individual indv){
 
             // write data to a csv file
             // TODO: only save data of the fittest trial?
-            p.storeData(bee1.getSelfPosition(), time);
+            // p.storeData(bee1.getSelfPosition(), time);
         }
 
-        p.writeCSV(trials);
+        // p.writeCSV(trials);
 
-        cout<<"final pos: bee1 "<< bee2.getSelfPosition()<<endl;
+        // cout<<"final pos: bee1 "<< bee2.getSelfPosition()<<endl;
         
         // update fitness of indv
         fitness_across_trials[trials] = 1 - (abs(bee2.getSelfPosition() - target));
@@ -212,7 +214,7 @@ void assesIndividual(Individual indv){
         trials++;
     }
 
-    cout<<" 20 trials done. "<<endl;
+    // cout<<" 20 trials done. "<<endl;
 
     // rank based fitness overall calc
     indv.fitness = calcFitnessOverTrials(fitness_across_trials);
@@ -236,26 +238,13 @@ Individual selectParent(Individual population[POP_SIZE]){
 
     findRank(POP_SIZE, overall, rank);
 
-    for (int i = 0; i < POP_SIZE; i++) { 
-        int r = 1, s = 1; 
-            
-        for (int j = 0; j < POP_SIZE; j++) { 
-            if (j != i && population[j].fitness < population[i].fitness) 
-                r += 1; 
-                    
-            if (j != i && population[j].fitness == population[i].fitness) 
-                s += 1;      
-        }
-            
-        // Use formula to obtain rank 
-        rank[i] = r + (float)(s - 1) / (float) 2;
-        prob[i] = 1 / (1+rank[i]);
-    } 
-
     float Sum = 0.0;
     float total = 0.0;
 
+    // # if probs[i] = 1   then i is the best indivdiual
+    // # if probs[i] = 1/N then this is the worst individual
     for (int i=0; i<POP_SIZE; i++){
+        prob[i] = 1 / (1+rank[i]);
         Sum += prob[i];
     }
     float r = randomNumberUniform(0, Sum);
@@ -280,7 +269,7 @@ Individual mutateOffspring(Individual offspring){
 
     // decode genome??
     for (int i=0; i<GENES; i++){
-        I.genome[i] = randomNumberGaussian(offspring.genome[i], sqrt(0.2));
+        I.genome[i] = randomNumberGaussian(offspring.genome[i]);
     }
 }
 
@@ -297,15 +286,13 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
 ***/
 int main(int argc, char* argv[]){
 
-    int STOP_CND = 0;
-
     // initialize population
     Individual population[POP_SIZE];
     init_population(population);
     
     // assess population
     for (int i=0; i<POP_SIZE; i++){
-        assesIndividual(population[i]);
+        assessIndividual(population[i]);
     }
 
     int gen = 0;
@@ -320,7 +307,7 @@ int main(int argc, char* argv[]){
 
             Individual mutated_offspring = mutateOffspring(offspring);
             
-            assesIndividual(mutated_offspring);
+            assessIndividual(mutated_offspring);
             if (mutated_offspring.fitness > parent.fitness){ // does the order of insertion never matter?
                 new_population[i] = mutated_offspring;
             }
