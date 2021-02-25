@@ -2,40 +2,13 @@
 // trying to do the thing for project
 // ***************************************
 
-#include "CTRNN.h"
-#include "Agent.h"
-#include "Plot.h"
+#include "main.h"
 
-#include <iostream>
-#include <array>
-#include <random>
 // #include <ctime>
 // #include <algorithm>
 // #include <limits>
 // #include <cmath>
 
-using namespace std;
-
-
-// -- Global constants
-const int NEURONS = 3;
-// const int GENES = (NEURONS+3)*NEURONS;
-
-const int GENERATIONS = 100;
-const int POP_SIZE = 10;
-
-const double RUN_DURATION = 250;
-const double TIMESTEP_SIZE = 0.1; // or 0.01
-const float SPEED = 0.01; //"units per time unit"
-const float DIST = SPEED/TIMESTEP_SIZE; // 0.01 is the biggest step/movement
-
-Plot p;
-
-// chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33
-struct Individual{
-    float genome[GENES]; //aka Chromosome, Genotype
-    float fitness;
-};
 
 /***
  ***    HELPER FUNCTIONS
@@ -98,14 +71,14 @@ bool checkAgentContact(float a, float b){
     float a_high = a + 0.2;
 
     // if b is in the range of a, return true
-    if (b >= a_low && b >= a_high){
+    if (b >= a_low && b <= a_high){
         return true;
     }
 
     return false;
 }
 
-float contactAgent(Agent &agent1, Agent &agent2){
+void contactAgent(Agent &agent1, Agent &agent2){
     // if they are in range of each other, then signal is 1
     if (checkAgentContact(agent1.getSelfPosition(), agent2.getSelfPosition())){ 
         agent1.updateContactSensor(1);
@@ -118,22 +91,22 @@ float contactAgent(Agent &agent1, Agent &agent2){
 }
 
 // West <---- (._.) ----> East
-float moveAgent(Agent &agent){
+void moveAgent(Agent &agent){
     double state = agent.getState(1); //state of motor neuron
     float cur_location = agent.getSelfPosition();
     float new_location = cur_location; //just in case? lol
     if (state < 0.5){
         // move east
-        float new_location = abs(cur_location + DIST);
+        new_location = abs(cur_location + DIST);
         // agent.updateSelfPosition(new_location);
     }
     else if (state >= 0.5){
         // move west
-        float new_location = abs(cur_location - DIST);
+        new_location = abs(cur_location - DIST);
         // agent.updateSelfPosition(new_location);
     }
     else {
-        // float new_location = abs(cur_location - DIST);
+        // new_location = abs(cur_location - DIST);
         cout<<"how did i get here"<<endl;
     }
     agent.updateSelfPosition(new_location);
@@ -271,6 +244,8 @@ Individual mutateOffspring(Individual offspring){
     for (int i=0; i<GENES; i++){
         I.genome[i] = randomNumberGaussian(offspring.genome[i]);
     }
+
+    return I;
 }
 
 
@@ -322,5 +297,7 @@ int main(int argc, char* argv[]){
         gen++;
     }
 
+    cout<<"Evolution complete. :) "<<endl;
+    
     return 0;
 }
