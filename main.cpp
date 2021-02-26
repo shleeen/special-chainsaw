@@ -11,46 +11,6 @@
 
 
 /***
- ***    HELPER FUNCTIONS
-***/
-// Generate random number in given range from a uniform distribution
-float randomNumberUniform(float start, float end){
-    std::random_device rd;
-    std::default_random_engine eng(rd());
-    std::uniform_real_distribution<float> distr(start, end);
-    return distr(eng);
-}
-
-// Generate random number from Gaussian distr
-float randomNumberGaussian(float mean){
-    float variance = 0.2;
-    std::random_device rd;
-    std::mt19937 generator(rd());
-    std::normal_distribution<float> distr(mean, sqrt(variance));
-    return distr(generator);
-}
-
-// find rank based on number of occurences of an element
-// rank of 1 -> smallest element, rank of N -> largest element
-// void findRank(float *array, float (&rank)[20]){  
-void findRank(int size, float *array, float *rank){      
-    for (int i = 0; i < size; i++) { 
-        int r = 1, s = 1; 
-          
-        for (int j = 0; j < size; j++) { 
-            if (j != i && array[j] < array[i]) 
-                r += 1; 
-                  
-            if (j != i && array[j] == array[i]) 
-                s += 1;      
-        }
-          
-        rank[i] = r + (float)(s - 1) / (float) 2;
-    } 
-}
-
-
-/***
  ***   GA FUNCTIONS
 ***/
 void init_population(Individual (&population)[POP_SIZE]){
@@ -62,54 +22,6 @@ void init_population(Individual (&population)[POP_SIZE]){
         population[i].fitness = 0;
     }
     cout<<"created population :)"<<endl;
-}
-
-
-// a & b -> location of respective agent
-bool checkAgentContact(float a, float b){
-    float a_low = a - 0.2;
-    float a_high = a + 0.2;
-
-    // if b is in the range of a, return true
-    if (b >= a_low && b <= a_high){
-        return true;
-    }
-
-    return false;
-}
-
-void contactAgent(Agent &agent1, Agent &agent2){
-    // if they are in range of each other, then signal is 1
-    if (checkAgentContact(agent1.getSelfPosition(), agent2.getSelfPosition())){ 
-        agent1.updateContactSensor(1);
-        agent2.updateContactSensor(1);
-    }
-    else {
-        agent1.updateContactSensor(0);
-        agent2.updateContactSensor(0);
-    }
-}
-
-// West <---- (._.) ----> East
-void moveAgent(Agent &agent){
-    double state = agent.getState(1); //state of motor neuron
-    float cur_location = agent.getSelfPosition();
-    float new_location = cur_location; //just in case? lol
-    if (state < 0.5){
-        // move east
-        new_location = abs(cur_location + DIST);
-        // agent.updateSelfPosition(new_location);
-    }
-    else if (state >= 0.5){
-        // move west
-        new_location = abs(cur_location - DIST);
-        // agent.updateSelfPosition(new_location);
-    }
-    else {
-        // new_location = abs(cur_location - DIST);
-        cout<<"how did i get here"<<endl;
-    }
-    agent.updateSelfPosition(new_location);
 }
 
 
@@ -153,8 +65,6 @@ void assessIndividual(Individual indv){
         bee1.updateSelfPosition(randomNumberUniform(0.0, 0.3));
         bee2.updateSelfPosition(randomNumberUniform(0.0, 0.3));
 
-        // cout<<"starting pos - > "<<bee1.getSelfPosition()<<endl;
-
         // SIMULATE THE BEES
         for (double time = TIMESTEP_SIZE; time <= RUN_DURATION; time += TIMESTEP_SIZE) {
             // set input values for c1 - based on where c1 is and where c2 is
@@ -178,19 +88,22 @@ void assessIndividual(Individual indv){
         }
 
         // p.writeCSV(trials);
-
-        // cout<<"final pos: bee1 "<< bee2.getSelfPosition()<<endl;
         
         // update fitness of indv
         fitness_across_trials[trials] = 1 - (abs(bee2.getSelfPosition() - target));
-
+                
         trials++;
     }
 
-    // cout<<" 20 trials done. "<<endl;
 
     // rank based fitness overall calc
-    indv.fitness = calcFitnessOverTrials(fitness_across_trials);
+    if (calcFitnessOverTrials(fitness_across_trials) < 0){
+        indv.fitness = 0;
+    }
+    else{
+        indv.fitness = calcFitnessOverTrials(fitness_across_trials);
+    }
+    // indv.fitness = calcFitnessOverTrials(fitness_across_trials);
 }
 
 
@@ -234,13 +147,13 @@ Individual selectParent(Individual population[POP_SIZE]){
 }
 
 
-// replace alleles with random numbers? ;-;
 // to find: mutation rate ??
 Individual mutateOffspring(Individual offspring){
     Individual I;
     I.fitness = 0.0;
 
     // decode genome??
+    // TODO: dont mutate gain
     for (int i=0; i<GENES; i++){
         I.genome[i] = randomNumberGaussian(offspring.genome[i]);
     }
@@ -298,6 +211,16 @@ int main(int argc, char* argv[]){
     }
 
     cout<<"Evolution complete. :) "<<endl;
-    
+
+    float max_fit=0.0; int index;
+    for(int k=0; k<POP_SIZE; k++ ){
+        // cout<<population[k].fitness<<" ";
+        if(population[k].fitness > max_fit){        
+            max_fit = population[k].fitness;
+            index = k;
+        }
+    }
+    cout << "Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
+
     return 0;
 }
