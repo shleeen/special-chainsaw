@@ -4,12 +4,6 @@
 
 #include "main.h"
 
-// #include <ctime>
-// #include <algorithm>
-// #include <limits>
-// #include <cmath>
-
-
 /***
  ***   GA FUNCTIONS
 ***/
@@ -90,29 +84,18 @@ void assessIndividual(Individual indv){
         // p.writeCSV(trials);
         
         // update fitness of indv
-        fitness_across_trials[trials] = 1 - (abs(bee2.getSelfPosition() - target));
+        fitness_across_trials[trials] = max(0.0 , 1.0 - (abs(bee2.getSelfPosition() - target)));
                 
         trials++;
     }
 
 
     // rank based fitness overall calc
-    if (calcFitnessOverTrials(fitness_across_trials) < 0){
-        indv.fitness = 0;
-    }
-    else{
-        indv.fitness = calcFitnessOverTrials(fitness_across_trials);
-    }
-    // indv.fitness = calcFitnessOverTrials(fitness_across_trials);
+    // check that this is not 0
+    indv.fitness = calcFitnessOverTrials(fitness_across_trials);
 }
 
 
-// tSearch - ? 
-// rank based selection from the overall fitness values
-    // end of generation
-        //  solutions selected using a rank-based system
-        // The selection of the parents depends on the rank of each individual and not the fitness.
-        // The higher ranked individuals are preferred more than the lower ranked ones.
 Individual selectParent(Individual population[POP_SIZE]){   
     float rank[POP_SIZE];
     float prob[POP_SIZE];
@@ -153,7 +136,7 @@ Individual mutateOffspring(Individual offspring){
     I.fitness = 0.0;
 
     // decode genome??
-    // TODO: dont mutate gain
+
     for (int i=0; i<GENES; i++){
         I.genome[i] = randomNumberGaussian(offspring.genome[i]);
     }

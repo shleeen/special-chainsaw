@@ -4,7 +4,7 @@
 #include <iostream>
 #include <array>
 #include <random>
-
+#include <algorithm>
 
 using namespace std;
 
@@ -65,6 +65,11 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
 /***
  ***    HELPER FUNCTIONS
 ***/
+// Sigmoid function
+float sigma(float x){
+    return 1/(1 + exp(-x));
+}
+
 // Generate random number in given range from a uniform distribution
 float randomNumberUniform(float start, float end){
     std::random_device rd;
@@ -129,22 +134,26 @@ void contactAgent(Agent &agent1, Agent &agent2){
 
 // West <---- (._.) ----> East
 void moveAgent(Agent &agent){
-    double output = agent.getOutput(0); //state of motor neuron
+    // step=(sigma(motor_weight*output_motor)-0.5)*0.2
+
+    double output = agent.getOutput(1);
     float cur_location = agent.getSelfPosition();
-    float new_location = cur_location; //just in case? lol
+    float step = (sigma(output) - 0.5) * 0.2;
+
     if (output < 0.5){
         // move east
-        new_location = abs(cur_location + DIST);
-        // agent.updateSelfPosition(new_location);
+        // new_location = abs(cur_location + DIST);
+        agent.updateSelfPosition(cur_location + step);
     }
     else if (output >= 0.5){
         // move west
-        new_location = abs(cur_location - DIST);
-        // agent.updateSelfPosition(new_location);
+        // new_location = abs(cur_location - DIST);
+        // SHOULD THIS BE ABS
+        agent.updateSelfPosition(abs(cur_location - step));
     }
     else {
-        // new_location = abs(cur_location - DIST);
-        // cout<<"how did i get here "<<output<<endl;
+        // dont move
+        agent.updateSelfPosition(cur_location);
     }
-    agent.updateSelfPosition(new_location);
+    // agent.updateSelfPosition(new_location);
 }
