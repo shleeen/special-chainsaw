@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 
     //view outputs on terminal
     cout<< "time " <<"N1-output "<<"N2-output "<<endl;
-    cout << 0.0 << " " << c.NeuronOutput(1) << " " << c.NeuronOutput(2) << endl;
+    cout << 0.0 << " " << c.NeuronOutput(0) << " " << c.NeuronOutput(0) << endl;
 
     // cout<< c.NeuronTimeConstant(1) << " "<< c.NeuronTimeConstant(2)<<endl;
     // c.SetNeuronTimeConstant(1, 0.05);
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     for (double time = StepSize; time <= RunDuration; time += StepSize) {
         // check environment, make update based on that???
         c.EulerStep(StepSize);
-        cout << time << " " << c.NeuronOutput(1) << " " << c.NeuronOutput(2) << endl;
+        cout << time << " " << c.NeuronOutput(3) << " " << c.NeuronOutput(1) << endl;
     }
     cout<< "time " <<"N1-output "<<"N2-output "<<endl;
     
