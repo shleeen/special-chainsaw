@@ -151,3 +151,22 @@ void mutate(){
 //     return random_int; 
 // } 
 */
+
+
+
+
+// void writeBestAgents(Individual population[POP_SIZE]){
+//     float max = 0.0;
+//     int index;
+//     for (int i=0; i<POP_SIZE; i++){
+//         cout<< population[i].fitness<<endl;
+//         if (population[i].fitness > max){
+//             max = population[i].fitness;
+//             index = i;
+//         }
+//     }
+//     cout<<"reached here"<<endl;
+//     for (int i=0; i<18; i++){
+//         cout<< max <<endl;
+//     }    
+// }
