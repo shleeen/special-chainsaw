@@ -11,9 +11,13 @@ Agent::Agent(int neurons, int genes){
     self_position = 0.0;
     contact_sensor = 0.0;
     target_sensor = 0.0;
-    motor = 0.0;
-
-    c.RandomizeCircuitState(-0.5,0.5); //whats the range
+    contact_weight = 0.0;
+    motor_weight = 0.0;
+    self_pos_weight = 0.0;
+    target_weight = 0.0;
+    
+    //  DO I NEED TO RANDOMIZE
+    // c.RandomizeCircuitState(-0.5,0.5); //whats the range
 }
 
 // map values from [0,1] to [x,y]
@@ -37,50 +41,39 @@ void Agent::updateNeuronParams(float genome[GENES]){
     for (int i=1; i<=neurons_count; i++){
         c.SetNeuronTimeConstant(i, decoded[offset]);
         c.SetNeuronBias(i, decoded[offset+1]);
-        c.SetNeuronGain(i, 1); //gain always fixed to 1
+        c.SetNeuronGain(i, 1.0); //gain always fixed to 1
         c.SetConnectionWeight(i, 1, decoded[offset+3]);
         c.SetConnectionWeight(i, 2, decoded[offset+4]);
         c.SetConnectionWeight(i, 3, decoded[offset+5]);
         offset += 6;
     }
 
+    contact_weight = decoded[18];
+    motor_weight = decoded[19];
+    target_weight = decoded[20];
+    self_pos_weight = decoded[21];
 }
 
 
 // Run the one step of the circuit !!
 void Agent::stepAgent(double timestep){
-    // cout<<"EULER STEP TIME "<<endl;
-    // for (int i=0; i<3; i++)
-    //     cout<< getState(i) << " "<< getOutput(i) <<endl;
-    
     c.EulerStep(timestep);
-    
-    // cout<<" --------- "<<endl;
-
-    // for (int i=0; i<3; i++)
-    //     cout<< getState(i) << " "<< getOutput(i)<<endl;
-
 }
 
 void Agent::updateContactSensor(int value){
     contact_sensor = value;
-    c.SetNeuronExternalInput(1, contact_sensor);
+    c.SetNeuronExternalInput(1, contact_sensor*contact_weight);
 }
 
 void Agent::updateTargetSensor(float target_range){
     target_sensor = target_range;
-    c.SetNeuronExternalInput(2, target_sensor);
+    c.SetNeuronExternalInput(2, target_sensor*target_weight);
 }
 
 void Agent::updateSelfPosition(float new_location){
     self_position = new_location;
-    c.SetNeuronExternalInput(3, self_position);
+    c.SetNeuronExternalInput(3, self_position*self_pos_weight);
 }
-
-void Agent::updateMotor(){
-    c.SetNeuronExternalInput(1, motor);
-}
-
 
 
 // --------- Getters
@@ -96,8 +89,8 @@ float Agent::getTargetSensor(){
     return target_sensor;
 }
 
-float Agent::getMotor(){
-    return motor;
+float Agent::getMotorWeight(){
+    return motor_weight;
 }
 
 double Agent::getState(int index){

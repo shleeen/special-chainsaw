@@ -1,16 +1,23 @@
 #include "CTRNN.h"
 
-const int GENES = 18;
+// maybe dont hardcoded this (scream)
+const int GENES = 18 + 4;
 
 struct range{
     float min;
     float max;
 };
 
-// chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33
+// chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33 | 
+//              contact_weight | motor_weight | self-pos_weight | target_weight 
 const range GENES_RANGE[GENES] = {{ .min = 0.0, .max = 30.0 },  { .min = -16.0, .max = 16.0 },  { .min = -16.0, .max = 16.0 },  { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, 
                                 { .min = 0.0, .max = 30.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 },
-                                { .min = 0.0, .max = 30.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }};
+                                { .min = 0.0, .max = 30.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 },
+                                { .min = -16.0, .max = 16.0 }, //contact weight
+                                { .min = -16.0, .max = 16.0 }, //motor weight
+                                { .min = -16.0, .max = 16.0 }, //self position weight
+                                { .min = -16.0, .max = 16.0 }, //target weight
+                                };
 
 
 class Agent {
@@ -31,7 +38,11 @@ class Agent {
         // The receiver also has this sensor, but its value is fixed to -1.
         float target_sensor;
         // input to neuron 1
-        float motor; 
+        // float motor;
+        float contact_weight;
+        float motor_weight;
+        float self_pos_weight;
+        float target_weight;
 
     public:        
         // constructor
@@ -40,7 +51,7 @@ class Agent {
         float getSelfPosition();
         int getContactSensor();
         float getTargetSensor();
-        float getMotor();
+        float getMotorWeight();
         double getState(int index);
         double getOutput(int index);
 
@@ -51,5 +62,4 @@ class Agent {
         void updateSelfPosition(float new_location);
         void updateContactSensor(int value);
         void updateTargetSensor(float target_range);
-        void updateMotor();
 };

@@ -15,13 +15,13 @@ using namespace std;
 const int NEURONS = 3;
 // const int GENES = (NEURONS+3)*NEURONS;
 
-const int GENERATIONS = 100;
+const int GENERATIONS = 300;
 const int POP_SIZE = 90;
 
 const double RUN_DURATION = 300;
 const double TIMESTEP_SIZE = 0.1; // or 0.01
-const float SPEED = 0.01; //"units per time unit"
-const float DIST = SPEED/TIMESTEP_SIZE; // 0.01 is the biggest step/movement
+// const float SPEED = 0.01; //"units per time unit"
+// const float DIST = SPEED/TIMESTEP_SIZE; // 0.01 is the biggest step/movement
 
 /*
  *  Global variables
@@ -32,7 +32,10 @@ Plot p;
 /*
  * STRUCT for an Individual in population
  */
-// chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33
+// chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 |
+//              tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | 
+//              tau3 | bias3 | gain3 | weight31 | weight32 | weight33 |
+//              contact_weight | motor_weight | self-pos_weight | target_weight 
 struct Individual{
     float genome[GENES]; //aka Chromosome, Genotype
     float fitness;
@@ -55,7 +58,7 @@ bool checkAgentContact(float a, float b);
 void contactAgent(Agent &agent1, Agent &agent2);
 void moveAgent(Agent &agent);
 float calcFitnessOverTrials(float fitness_list[20]);
-void assessIndividual(Individual indv);
+Individual assessIndividual(Individual indv);
 Individual selectParent(Individual population[POP_SIZE]); 
 Individual mutateOffspring(Individual offspring);
 void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP_SIZE]);
@@ -87,9 +90,7 @@ float randomNumberGaussian(float mean){
     return distr(generator);
 }
 
-// find rank based on number of occurences of an element
 // rank of 1 -> smallest element, rank of N -> largest element
-// void findRank(float *array, float (&rank)[20]){  
 void findRank(int size, float *array, float *rank){      
     for (int i = 0; i < size; i++) { 
         int r = 1, s = 1; 
@@ -138,22 +139,26 @@ void moveAgent(Agent &agent){
 
     double output = agent.getOutput(1);
     float cur_location = agent.getSelfPosition();
-    float step = (sigma(output) - 0.5) * 0.2;
+    float weight = agent.getMotorWeight();
+    float step = (sigma(weight*output) - 0.5) * 0.2;
 
-    if (output < 0.5){
-        // move east
-        // new_location = abs(cur_location + DIST);
-        agent.updateSelfPosition(cur_location + step);
-    }
-    else if (output >= 0.5){
-        // move west
-        // new_location = abs(cur_location - DIST);
-        // SHOULD THIS BE ABS
-        agent.updateSelfPosition(abs(cur_location - step));
-    }
-    else {
-        // dont move
-        agent.updateSelfPosition(cur_location);
-    }
-    // agent.updateSelfPosition(new_location);
+    // if step is negative, it moves west
+    agent.updateSelfPosition(cur_location + step);
+
+    // if (step < 0){
+    //     // move east
+    //     // new_location = abs(cur_location + DIST);
+    //     agent.updateSelfPosition(cur_location + step);
+    // }
+    // else if (step > 0){
+    //     // move west
+    //     // new_location = abs(cur_location - DIST);
+    //     // SHOULD THIS BE ABS
+    //     agent.updateSelfPosition(abs(cur_location - step));
+    // }
+    // else {
+    //     // dont move
+    //     agent.updateSelfPosition(cur_location);
+    // }
+    // // agent.updateSelfPosition(new_location);
 }

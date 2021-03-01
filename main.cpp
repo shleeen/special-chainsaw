@@ -32,14 +32,14 @@ float calcFitnessOverTrials(float fitness_list[20]){
     findRank(20, fitness_list, rank);
 
     for (int k=0; k<20; k++){
-        final_fitness += fitness_list[k] * (1/rank[k]);
+        final_fitness += fitness_list[k] * (1.0/rank[k]);
     }
 
     return final_fitness;
 }
 
 
-void assessIndividual(Individual indv){    
+Individual assessIndividual(Individual indv){  
     Agent bee1(NEURONS, GENES); //sender
     Agent bee2(NEURONS, GENES); //receiver
     bee2.updateTargetSensor(-1); //target sensor value for receiver is fixed
@@ -89,10 +89,10 @@ void assessIndividual(Individual indv){
         trials++;
     }
 
-
     // rank based fitness overall calc
-    // check that this is not 0
     indv.fitness = calcFitnessOverTrials(fitness_across_trials);
+
+    return indv;
 }
 
 
@@ -156,14 +156,17 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
  ***    MAIN FUNCTION
 ***/
 int main(int argc, char* argv[]){
-
+    fstream fout, fmean;
+    fout.open("FitnessVsGeneration.csv", ios::out);
+    fmean.open("MeanFitness.csv", ios::out);
+    
     // initialize population
     Individual population[POP_SIZE];
     init_population(population);
     
     // assess population
     for (int i=0; i<POP_SIZE; i++){
-        assessIndividual(population[i]);
+        population[i] = assessIndividual(population[i]);
     }
 
     int gen = 0;
@@ -177,9 +180,9 @@ int main(int argc, char* argv[]){
             Individual offspring = parent; //make a copy of parent
 
             Individual mutated_offspring = mutateOffspring(offspring);
-            
-            assessIndividual(mutated_offspring);
-            if (mutated_offspring.fitness > parent.fitness){ // does the order of insertion never matter?
+            mutated_offspring = assessIndividual(mutated_offspring);
+
+            if (mutated_offspring.fitness > parent.fitness){
                 new_population[i] = mutated_offspring;
             }
             else{
@@ -190,12 +193,36 @@ int main(int argc, char* argv[]){
         updatePopulation(population, new_population);
 
         cout<<"Generation "<<gen<<" complete."<<endl;
+        
+        // --------  STATS
+        float sum_fit = 0.0;
+        // plot best fit vs generation
+        float max_fit=0.0; int index;
+        for(int k=0; k<POP_SIZE; k++ ){
+            // cout<<population[k].fitness<<" ";
+            sum_fit += population[k].fitness;
+            if(population[k].fitness > max_fit){        
+                max_fit = population[k].fitness;
+                index = k;
+            }
+        }
+        cout << "\n Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
+        
+        fout<<gen<<", "<<population[index].fitness<<"\n";
+        fmean<<gen<<", "<< sum_fit/POP_SIZE <<"\n";
+
         gen++;
     }
 
     cout<<"Evolution complete. :) "<<endl;
 
-    float max_fit=0.0; int index;
+
+    fout.close();
+    fmean.close();
+
+    cout<<"written to file??!!"<<endl;
+
+    float max_fit = 0.0; int index=0;
     for(int k=0; k<POP_SIZE; k++ ){
         // cout<<population[k].fitness<<" ";
         if(population[k].fitness > max_fit){        
@@ -203,7 +230,16 @@ int main(int argc, char* argv[]){
             index = k;
         }
     }
-    cout << "Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
+    cout << "\n Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
+    fstream agent;
+    agent.open("Agent.csv", ios::out);
+    cout<<"BEST AGENT: "<<endl;
+    for (int i=0; i<GENES; i++){
+        cout<<population[index].genome[i];
+        agent<<population[index].genome[i]<<"\n";
+    }
+
+    agent.close();
 
     return 0;
 }
