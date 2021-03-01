@@ -1,6 +1,33 @@
 import matplotlib.pyplot as plt
 import csv
 
+def fig8():
+    s_pos=[]
+    r_pos=[]
+    time=[]
+    target=[]
+    
+    with open('fig8.csv', 'r') as csvfile:
+        csvfile = open('fig8.csv', 'r') 
+        plots= csv.reader(csvfile, delimiter=',')
+        for row in plots:
+            time.append(float(row[0]))
+            target.append(float(row[1]))
+            s_pos.append(float(row[2]))
+            r_pos.append(float(row[3]))
+
+    f2 = plt.figure()
+    plt.plot(time, s_pos)
+    plt.plot(time, r_pos)
+    plt.plot(time, target, linestyle='dashed')
+
+    plt.title('Target = 0.8')
+    plt.xlabel('Time')
+    plt.ylabel('Position')
+    # plt.show()
+    plt.savefig('Fig8.png')
+
+
 def meanFitvsGenerations():
     gen=[]
     mean_fit=[]
@@ -46,6 +73,7 @@ def main():
     # call the plotter functions here
     bestFitvsGenerations()
     meanFitvsGenerations()
+    fig8()
 
     print("something has been plotted. :) ")
 
