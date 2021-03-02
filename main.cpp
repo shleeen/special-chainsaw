@@ -19,7 +19,6 @@ void init_population(Individual (&population)[POP_SIZE]){
 }
 
 
-// void calcRankBasedOverallFitness(Individual population[POP_SIZE], float (&overall)[POP_SIZE]){
 float calcFitnessOverTrials(float fitness_list[20]){
     // for (int k=0; k<POP_SIZE; k++){
     //     overall[k] = population[k].fitness;
@@ -33,6 +32,7 @@ float calcFitnessOverTrials(float fitness_list[20]){
 
     for (int k=0; k<20; k++){
         final_fitness += fitness_list[k] * (1.0/rank[k]);
+        // final_fitness += fitness_list[k] * ((21-rank[k])/20);
     }
 
     return final_fitness;
@@ -91,7 +91,7 @@ Individual assessIndividual(Individual indv){
 
     // rank based fitness overall calc
     indv.fitness = calcFitnessOverTrials(fitness_across_trials);
-
+    // cout<<indv.fitness<<endl;
     return indv;
 }
 
@@ -157,8 +157,8 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
 ***/
 int main(int argc, char* argv[]){
     fstream fout, fmean;
-    fout.open("FitnessVsGeneration.csv", ios::out);
-    fmean.open("MeanFitness.csv", ios::out);
+    fout.open("data/FitnessVsGeneration.csv", ios::out);
+    fmean.open("data/MeanFitness.csv", ios::out);
     
     // initialize population
     Individual population[POP_SIZE];
@@ -232,10 +232,10 @@ int main(int argc, char* argv[]){
     }
     cout << "\n Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
     fstream agent;
-    agent.open("Agent.csv", ios::out);
+    agent.open("data/Agent.csv", ios::out);
     cout<<"BEST AGENT: "<<endl;
     for (int i=0; i<GENES; i++){
-        cout<<population[index].genome[i];
+        cout<<population[index].genome[i]<<endl;
         agent<<population[index].genome[i]<<"\n";
     }
 

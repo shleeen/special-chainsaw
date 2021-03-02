@@ -7,8 +7,8 @@ def fig8():
     time=[]
     target=[]
     
-    with open('fig8.csv', 'r') as csvfile:
-        csvfile = open('fig8.csv', 'r') 
+    with open('data/Fig8_yes.csv', 'r') as csvfile:
+        csvfile = open('data/Fig8_yes.csv', 'r') 
         plots= csv.reader(csvfile, delimiter=',')
         for row in plots:
             time.append(float(row[0]))
@@ -19,21 +19,21 @@ def fig8():
     f2 = plt.figure()
     plt.plot(time, s_pos)
     plt.plot(time, r_pos)
-    plt.plot(time, target, linestyle='dashed')
+    # plt.plot(time, target, linestyle='dashed')
 
     plt.title('Target = 0.8')
     plt.xlabel('Time')
     plt.ylabel('Position')
     # plt.show()
-    plt.savefig('Fig8.png')
+    plt.savefig('plots/Fig8.png')
 
 
 def meanFitvsGenerations():
     gen=[]
     mean_fit=[]
     
-    with open('MeanFitness.csv', 'r') as csvfile:
-        csvfile = open('MeanFitness.csv', 'r') 
+    with open('data/MeanFitness.csv', 'r') as csvfile:
+        csvfile = open('data/MeanFitness.csv', 'r') 
         plots= csv.reader(csvfile, delimiter=',')
         for row in plots:
             gen.append(float(row[0]))
@@ -46,15 +46,15 @@ def meanFitvsGenerations():
     plt.xlabel('Generations')
     plt.ylabel('Mean Fitness')
     # plt.show()
-    plt.savefig('MeanFitVsGen.png')
+    plt.savefig('plots/MeanFitVsGen.png')
 
 
 def bestFitvsGenerations():
     gen=[]
     best_fit=[]
     
-    with open('FitnessVsGeneration.csv', 'r') as csvfile:
-        csvfile = open('FitnessVsGeneration.csv', 'r') 
+    with open('data/FitnessVsGeneration.csv', 'r') as csvfile:
+        csvfile = open('data/FitnessVsGeneration.csv', 'r') 
         plots= csv.reader(csvfile, delimiter=',')
         for row in plots:
             gen.append(float(row[0]))
@@ -66,7 +66,7 @@ def bestFitvsGenerations():
     plt.title('Best Fitness vs Generations')
     plt.xlabel('Generations')
     plt.ylabel('Best Fitness')
-    plt.savefig('BestFitVsGen.png')
+    plt.savefig('plots/BestFitVsGen.png')
 
 
 def main():

@@ -16,12 +16,10 @@ const int NEURONS = 3;
 // const int GENES = (NEURONS+3)*NEURONS;
 
 const int GENERATIONS = 300;
-const int POP_SIZE = 90;
+const int POP_SIZE = 50;
 
 const double RUN_DURATION = 300;
 const double TIMESTEP_SIZE = 0.1; // or 0.01
-// const float SPEED = 0.01; //"units per time unit"
-// const float DIST = SPEED/TIMESTEP_SIZE; // 0.01 is the biggest step/movement
 
 /*
  *  Global variables
@@ -143,22 +141,22 @@ void moveAgent(Agent &agent){
     float step = (sigma(weight*output) - 0.5) * 0.2;
 
     // if step is negative, it moves west
-    agent.updateSelfPosition(cur_location + step);
+    // agent.updateSelfPosition(cur_location + step);
 
-    // if (step < 0){
-    //     // move east
-    //     // new_location = abs(cur_location + DIST);
-    //     agent.updateSelfPosition(cur_location + step);
-    // }
-    // else if (step > 0){
-    //     // move west
-    //     // new_location = abs(cur_location - DIST);
-    //     // SHOULD THIS BE ABS
-    //     agent.updateSelfPosition(abs(cur_location - step));
-    // }
-    // else {
-    //     // dont move
-    //     agent.updateSelfPosition(cur_location);
-    // }
-    // // agent.updateSelfPosition(new_location);
+    if (step < 0){
+        // move east
+        // new_location = abs(cur_location + DIST);
+        agent.updateSelfPosition(cur_location + step);
+    }
+    else if (step > 0){
+        // move west
+        // new_location = abs(cur_location - DIST);
+        // SHOULD THIS BE ABS
+        agent.updateSelfPosition(abs(cur_location - step));
+    }
+    else {
+        // dont move
+        agent.updateSelfPosition(cur_location);
+    }
+    // agent.updateSelfPosition(new_location);
 }
