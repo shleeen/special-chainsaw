@@ -22,11 +22,9 @@ Agent::Agent(int neurons, int genes){
 
 // map values from [0,1] to [x,y]
 void Agent::decodeGenome(float genome[GENES], float (&decoded)[GENES]){
-
-    for (int i =0; i<GENES; i++){
-        decoded[i] = GENES_RANGE[i].min + ((GENES_RANGE[GENES].max - GENES_RANGE[GENES].min) / (1 - 0)) * (genome[i] - 0);
+    for (int i = 0; i<GENES; i++){
+        decoded[i] = GENES_RANGE[i].min + ((GENES_RANGE[i].max - GENES_RANGE[i].min) * (genome[i]));
     }
-
 }
 
 //decode the genome & set the agent up with the params
@@ -100,3 +98,8 @@ double Agent::getState(int index){
 double Agent::getOutput(int index){
     return c.NeuronOutput(index);
 }
+
+// void Agent::printParams(){
+//     cout<<"Neuron 1:"<<endl;
+//     cout<<"Tau "<<c.NeuronTimeConstant(1)<<endl;
+// }
