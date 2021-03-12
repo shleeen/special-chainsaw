@@ -53,7 +53,7 @@ def plotDiachronic():
     plt.subplot(1, 3, 3)
     plt.plot(time, s_contact, label="contact sensor")
     plt.plot(time, s_pos, label="position sensor")
-    plt.plot(time, s_target, label="target sensor (constant value)")
+    plt.plot(time, s_target, label="target sensor ")
     plt.legend()
     plt.xlabel('Time')
     plt.ylabel('Sender\'s Sensor Value')
