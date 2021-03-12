@@ -15,7 +15,7 @@ using namespace std;
 const int NEURONS = 3;
 // const int GENES = (NEURONS+3)*NEURONS;
 
-const int GENERATIONS = 300;
+const int GENERATIONS = 1000;
 const int POP_SIZE = 50;
 
 const double RUN_DURATION = 300;
@@ -112,6 +112,7 @@ bool checkAgentContact(float a, float b){
     // float a_high = a + 0.2;
 
     // if b is in the range of a, return true
+    // if distance between a and b is less than 0.4, then in range
     if (abs(a-b) < 0.4){
         return true;
     }
@@ -138,25 +139,25 @@ void moveAgent(Agent &agent){
     double output = agent.getOutput(1);
     float cur_location = agent.getSelfPosition();
     float weight = agent.getMotorWeight();
-    float step = (sigma(weight*output) - 0.5) * 0.2;
+    float step = (sigma(weight*output) - 0.5) * 0.2; // rescales to range -0.1, 0.1
 
     // if step is negative, it moves west
-    // agent.updateSelfPosition(cur_location + step);
+    //                else, moves east
+    agent.updateSelfPosition(cur_location + step);
 
-    if (step < 0){
-        // move east
-        // new_location = abs(cur_location + DIST);
-        agent.updateSelfPosition(cur_location + step);
-    }
-    else if (step > 0){
-        // move west
-        // new_location = abs(cur_location - DIST);
-        // SHOULD THIS BE ABS
-        agent.updateSelfPosition(abs(cur_location - step));
-    }
-    else {
-        // dont move
-        agent.updateSelfPosition(cur_location);
-    }
+    // if (step < 0){
+    //     // move east
+    //     // new_location = abs(cur_location + DIST);
+    //     agent.updateSelfPosition(cur_location + step);
+    // }
+    // else if (step > 0){
+    //     // move west
+    //     // new_location = abs(cur_location - DIST);
+    //     agent.updateSelfPosition(cur_location - step);
+    // }
+    // else {
+    //     // dont move
+    //     agent.updateSelfPosition(cur_location);
+    // }
     // agent.updateSelfPosition(new_location);
 }

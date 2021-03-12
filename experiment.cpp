@@ -61,6 +61,8 @@ void diachronicTesting(Individual best){
 
     // close file
     fout.close();
+
+    cout<<"DONE TESTING FOR TARGET: "<<target<<endl;
 }
 
 
@@ -69,10 +71,14 @@ void trialedTesting(Individual best){
     f6.open("data/AbsMeanDist.csv", ios::out);
     f7.open("data/MeanFinalPosition.csv", ios::out);
 
+    int successful_trials = 0; //counter for counting # of successes
+    int num_targets = 0;
     float target = 0;
     
-    for (float target=TARGET_MIN; target <=TARGET_MAX; target+=0.01){
-        target += 0.01;
+    // <= TARGET_MAX gives 51 different targets to test against, rather than 50
+    for (float target=TARGET_MIN; target<TARGET_MAX; target+=0.01){
+        num_targets += 1;
+
         pl.target = target;
         cout<<" target : "<<target<<endl;
 
@@ -81,7 +87,6 @@ void trialedTesting(Individual best){
 
         // for each target, do 50 trials
         for (int trials=0; trials<50; trials++){
-
             // new set of agents for each trial, params initialized to 0
             Agent sender(NEURONS, GENES);
             Agent receiver(NEURONS, GENES);
@@ -124,6 +129,11 @@ void trialedTesting(Individual best){
 
             mean_pos = mean_pos + (receiver.getSelfPosition() - mean_pos)/(trials+1);
 
+            // check success of trial
+            if (abs(receiver.getSelfPosition() - target) < 0.05){ //then its a success
+                successful_trials += 1;
+            }
+
         } //end of trials While
 
         // cout<<mean_dist<<endl;
@@ -134,6 +144,10 @@ void trialedTesting(Individual best){
 
     f6.close();
     f7.close();
+    // cout<<TRIALS<<" "<<num_targets<<" "<<(float)(TRIALS*num_targets)<<endl;
+    float success_rate = (float)successful_trials/(float)(TRIALS*num_targets);
+    cout<<"50 trials complete for "<<num_targets<<" targets."<<endl;
+    cout<<"Success --> "<<success_rate<<" "<<success_rate*100<<endl;
 }
 
 
@@ -141,18 +155,18 @@ void trialedTesting(Individual best){
 int main(int argc, char* argv[]){
     // open file
     fstream myFile("data/Agent.csv", ios::in);
-    Individual best;
+    Individual best_agent;
     string line;
     for(int i=0; i<GENES; i++){
         // cout<<line<<" "<<endl;
         getline(myFile, line); //get one line from file
-        best.genome[i] = stof(line); //save value as float into Indv
+        best_agent.genome[i] = stof(line); //save value as float into Indv
     }
-    best.fitness = 0.0;
+    best_agent.fitness = 0.0;
 
     //call experiments/tests
-    diachronicTesting(best);
-    // trialedTesting(best);
+    diachronicTesting(best_agent);
+    trialedTesting(best_agent);
 
-    cout<<"stuff was written"<<endl;
+    cout<<"Data written to file."<<endl;
 }

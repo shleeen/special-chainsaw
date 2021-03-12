@@ -31,8 +31,8 @@ float calcFitnessOverTrials(float fitness_list[20]){
     findRank(20, fitness_list, rank);
 
     for (int k=0; k<20; k++){
-        final_fitness += fitness_list[k] * (1.0/rank[k]);
-        // final_fitness += fitness_list[k] * ((21-rank[k])/20);
+        // final_fitness += fitness_list[k] * (1.0/rank[k]);
+        final_fitness += fitness_list[k] * ((21-rank[k])/20);
     }
 
     return final_fitness;
@@ -84,7 +84,7 @@ Individual assessIndividual(Individual indv){
         // p.writeCSV(trials);
         
         // update fitness of indv
-        fitness_across_trials[trials] = max(0.0 , 1.0 - (abs(bee2.getSelfPosition() - target)));
+        fitness_across_trials[trials] = max(0.0, 1.0 - (abs(bee2.getSelfPosition() - target)));
                 
         trials++;
     }
@@ -191,8 +191,6 @@ int main(int argc, char* argv[]){
         }
 
         updatePopulation(population, new_population);
-
-        cout<<"Generation "<<gen<<" complete."<<endl;
         
         // --------  STATS
         float sum_fit = 0.0;
@@ -206,7 +204,10 @@ int main(int argc, char* argv[]){
                 index = k;
             }
         }
-        cout << "\n Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
+
+        cout<<"Generation "<<gen<<" complete. "<<" Largest fitness = " << max_fit <<endl;
+
+        // cout << "\n Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
         
         fout<<gen<<", "<<population[index].fitness<<"\n";
         fmean<<gen<<", "<< sum_fit/POP_SIZE <<"\n";
