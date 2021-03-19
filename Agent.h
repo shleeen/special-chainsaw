@@ -62,4 +62,6 @@ class Agent {
         void updateSelfPosition(float new_location);
         void updateContactSensor(int value);
         void updateTargetSensor(float target_range);
+
+        friend ostream& operator<<(ostream& os, const Agent& ag);
 };
