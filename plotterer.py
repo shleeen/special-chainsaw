@@ -37,7 +37,7 @@ def plotDiachronic():
     plt.legend()
     plt.xlabel('Time')
     plt.ylabel('Position')
-    # plt.ylim(-1, 2)
+    plt.ylim(-1.5, 3)
 
     #plot 2:
     plt.subplot(1, 3, 2)
@@ -47,7 +47,7 @@ def plotDiachronic():
     plt.legend()
     plt.xlabel('Time')
     plt.ylabel('Receiver\'s Sensor Value')
-    # plt.ylim(-1, 2)
+    plt.ylim(-1.5, 3)
 
     #plot 3:
     plt.subplot(1, 3, 3)
@@ -57,7 +57,7 @@ def plotDiachronic():
     plt.legend()
     plt.xlabel('Time')
     plt.ylabel('Sender\'s Sensor Value')
-    # plt.ylim(-1, 2)
+    plt.ylim(-1.5, 3)
 
     plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
     # plt.show()

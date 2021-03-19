@@ -99,7 +99,26 @@ double Agent::getOutput(int index){
     return c.NeuronOutput(index);
 }
 
-// void Agent::printParams(){
-//     cout<<"Neuron 1:"<<endl;
-//     cout<<"Tau "<<c.NeuronTimeConstant(1)<<endl;
-// }
+
+ostream& operator<<(ostream& os, const Agent& agt){
+    // os <<"Neuron 1: \n";
+    // os <<"Tau: "<< agt.c. <<"\n";
+    // os <<"Bias: "<< agt.c.taus(1)<<"\n";
+    // os <<"Gain: "<< agt.c.taus(1)<<"\n";
+    // os <<"Weight : "<< agt.c.taus(1)<<"\n";
+
+    // os <<"Neuron 2: \n";
+
+    os << "Self position "<< agt.self_position<<"\n";
+    os << "Self position weight "<< agt.self_pos_weight<<"\n";
+
+    os << "Contact sensor "<< agt.contact_sensor<<"\n";
+    os << "Contact Sensor weight "<< agt.contact_weight<<"\n";
+
+    os << "Target sensor: "<< agt.target_sensor<<"\n";
+    os << "Target sensor weight: "<<agt.target_weight<<"\n";
+
+    os << "Motor Weight "<< agt.motor_weight<<"\n";
+
+    return os;
+}
