@@ -37,27 +37,27 @@ def plotDiachronic():
     plt.legend()
     plt.xlabel('Time')
     plt.ylabel('Position')
-    plt.ylim(-1.5, 3)
+    plt.ylim(-1.5, 2)
 
     #plot 2:
     plt.subplot(1, 3, 2)
-    plt.plot(time, r_contact, label="contact sensor")
-    plt.plot(time, r_pos, label="position sensor")
-    plt.plot(time, r_target, label="target sensor (constant value)")
+    plt.plot(time, r_pos, label="position sensor", color="tab:orange")
+    plt.plot(time, r_contact, label="contact sensor", color="rebeccapurple")
+    plt.plot(time, r_target, label="target sensor (constant value)", color="maroon")
     plt.legend()
     plt.xlabel('Time')
     plt.ylabel('Receiver\'s Sensor Value')
-    plt.ylim(-1.5, 3)
+    plt.ylim(-1.5, 2)
 
     #plot 3:
     plt.subplot(1, 3, 3)
-    plt.plot(time, s_contact, label="contact sensor")
     plt.plot(time, s_pos, label="position sensor")
-    plt.plot(time, s_target, label="target sensor ")
+    plt.plot(time, s_contact, label="contact sensor", color="rebeccapurple")
+    plt.plot(time, s_target, label="target sensor", color="maroon")
     plt.legend()
     plt.xlabel('Time')
     plt.ylabel('Sender\'s Sensor Value')
-    plt.ylim(-1.5, 3)
+    plt.ylim(-1.5, 2)
 
     plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
     # plt.show()
@@ -77,7 +77,7 @@ def meanFitvsGenerations():
             gen.append(float(row[0]))
             mean_fit.append(float(row[1]))
 
-    f1 = plt.figure()
+    plt.figure()
     plt.plot(gen, mean_fit, marker='o')
 
     plt.title('Mean Fitness vs Generations')
@@ -86,13 +86,13 @@ def meanFitvsGenerations():
     # plt.show()
     plt.savefig('plots/MeanFitVsGen.png')
 
-    fig1, ax1 = plt.subplots()
-    ax1.set_title('Basic Plot')
-    ax1.boxplot(mean_fit)
-    # ax1.boxplot(r_pos)
-    fig1.savefig('plots/mean_box_plot.png')
+    # fig1, ax1 = plt.subplots()
+    # ax1.set_title('Basic Plot')
+    # ax1.boxplot(mean_fit)
+    # # ax1.boxplot(r_pos)
+    # fig1.savefig('plots/mean_box_plot.png')
 
-
+# BestFitVsGeneration
 def bestFitvsGenerations():
     gen=[]
     best_fit=[]
@@ -104,7 +104,7 @@ def bestFitvsGenerations():
             gen.append(float(row[0]))
             best_fit.append(float(row[1]))
 
-    plt.figure(0)
+    plt.figure()
     plt.plot(gen, best_fit) #, marker='x'
 
     plt.title('Best Fitness vs Generations')
@@ -153,8 +153,8 @@ def plotMeanFinalPosition():
 
 def main():
     # call the plotter functions here
-    bestFitvsGenerations()
     meanFitvsGenerations()
+    bestFitvsGenerations()
     plotDiachronic()
     absMeanDistance()
     plotMeanFinalPosition()
