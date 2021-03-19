@@ -28,11 +28,27 @@ void Agent::decodeGenome(float genome[GENES], float (&decoded)[GENES]){
 }
 
 //decode the genome & set the agent up with the params
-// also set the location/motor values
-void Agent::updateNeuronParams(float genome[GENES]){
-
+void Agent::updateNeuronParams(float genome[GENES], int flag){
     float decoded[GENES];
-    decodeGenome(genome, decoded);
+
+    // if flag is 1, decode
+    if (flag == 1){
+        decodeGenome(genome, decoded);
+    }
+    // else don't bound the genome
+    else{
+        cout<<"not decoding the genome :') "<<endl;
+        for (int i = 0; i<GENES; i++){
+            decoded[i] = genome[i];
+
+            // check lower bound of tau, clip at 0
+            if (i == 0 || i == 6 || i == 12 ){
+                if (genome[i] < 0){
+                    decoded[i] = 0.0;
+                }
+            }
+        }
+    }
 
     int offset = 0; // 3+3=6
 

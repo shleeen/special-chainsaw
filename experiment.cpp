@@ -29,8 +29,8 @@ void diachronicTesting(Individual best){
     receiver.updateTargetSensor(-1);
 
     // set both Agents params with Best Indv's genome
-    sender.updateNeuronParams(best.genome);
-    receiver.updateNeuronParams(best.genome);
+    sender.updateNeuronParams(best.genome, 1);
+    receiver.updateNeuronParams(best.genome, 1);
 
     // draw starting position of agents
     sender.updateSelfPosition(randomNumberUniform(0.0, 0.3));
@@ -54,8 +54,17 @@ void diachronicTesting(Individual best){
         receiver.stepAgent(TIMESTEP_SIZE);
 
         // update location of c1 - based on motor neuron output
-        moveAgent(sender);
-        moveAgent(receiver);
+        moveAgent(sender, TIMESTEP_SIZE);
+        // clip the senderrrr
+        float sender_pos = sender.getSelfPosition();
+        if (sender_pos > 0.3){
+            sender.updateSelfPosition(0.3);
+        }
+        else if (sender_pos < 0.0){
+            sender.updateSelfPosition(0.0);
+        }
+
+        moveAgent(receiver, TIMESTEP_SIZE);
     }
     // }   
 
@@ -93,8 +102,8 @@ void trialedTesting(Individual best){
             receiver.updateTargetSensor(-1);
 
             // set both Agents params with Best Indv's genome
-            sender.updateNeuronParams(best.genome);
-            receiver.updateNeuronParams(best.genome);
+            sender.updateNeuronParams(best.genome, 1);
+            receiver.updateNeuronParams(best.genome, 1);
 
             // draw starting position of agents
             sender.updateSelfPosition(randomNumberUniform(0.0, 0.3));
@@ -115,11 +124,17 @@ void trialedTesting(Individual best){
                 receiver.stepAgent(TIMESTEP_SIZE);
 
                 // update location of c1 - based on motor neuron output
-                moveAgent(sender);
-                moveAgent(receiver);
-
-                // write data to a csv file
-                // pl.storeDataFig8(sender.getSelfPosition(), receiver.getSelfPosition(), time);
+                moveAgent(sender, TIMESTEP_SIZE);
+                // clip the senderrrr
+                float sender_pos = sender.getSelfPosition();
+                if (sender_pos > 0.3){
+                    sender.updateSelfPosition(0.3);
+                }
+                else if (sender_pos < 0.0){
+                    sender.updateSelfPosition(0.0);
+                }
+                
+                moveAgent(receiver, TIMESTEP_SIZE);
             }
 
             // fitness_across_trials[trials] = 1 - (abs(bee2.getSelfPosition() - target));
@@ -136,7 +151,6 @@ void trialedTesting(Individual best){
 
         } //end of trials While
 
-        // cout<<mean_dist<<endl;
         f6<< target << ", " << abs(mean_dist) <<"\n";   
         f7<< target << ", " << mean_pos <<"\n";
 

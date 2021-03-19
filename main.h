@@ -17,6 +17,7 @@ const int NEURONS = 3;
 
 const int GENERATIONS = 1000;
 const int POP_SIZE = 50;
+// const int MIN_GEN_DECOD = 0.1*GENERATIONS;
 
 const double RUN_DURATION = 300;
 const double TIMESTEP_SIZE = 0.1; // or 0.01
@@ -51,10 +52,10 @@ void findRank(int size, float *array, float *rank);
 /*
  * GA functions 
  */
-void init_population(Individual (&population)[POP_SIZE]);
+void initPopulation(Individual (&population)[POP_SIZE]);
 bool checkAgentContact(float a, float b);
 void contactAgent(Agent &agent1, Agent &agent2);
-void moveAgent(Agent &agent);
+void moveAgent(Agent &agent, float stepSize);
 float calcFitnessOverTrials(float fitness_list[20]);
 Individual assessIndividual(Individual indv);
 Individual selectParent(Individual population[POP_SIZE]); 
@@ -132,14 +133,24 @@ void contactAgent(Agent &agent1, Agent &agent2){
     }
 }
 
-// West <---- (._.) ----> East
-void moveAgent(Agent &agent){
-    // step=(sigma(motor_weight*output_motor)-0.5)*0.2
+// from R. Beer's TSearch library
+float clip(float x, float min, float max){
+	float temp;
+	
+	temp = ((x > min)?x:min);
+	return (temp < max)?temp:max;
+}
 
+
+// West <---- (._.) ----> East
+void moveAgent(Agent &agent, float stepSize){
     double output = agent.getOutput(1);
     float cur_location = agent.getSelfPosition();
     float weight = agent.getMotorWeight();
-    float step = (sigma(weight*output) - 0.5) * 0.2; // rescales to range -0.1, 0.1
+    // float step = (sigma(weight*output) - 0.5) * 0.2; // rescales to range -0.1, 0.1
+
+    // rescales to range [-0.1*stepize, 0.1*stepSize]
+    float step = (sigma(weight*output) - 0.5) * stepSize * 0.2;
 
     // if step is negative, it moves west
     //                else, moves east
