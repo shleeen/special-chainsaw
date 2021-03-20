@@ -170,3 +170,19 @@ void mutate(){
 //         cout<< max <<endl;
 //     }    
 // }
+
+
+//______________________________________________________
+//__________ SELECTION PRESSURE CODE
+//______________________________________________________
+
+    // float alpha = 1.1;
+
+    // if alpha > 1, stronger selection
+    // if alpha < 1, weaker selection 
+    // selection_probability[i] = 1/pow(rank[i], alpha);
+
+    // ...
+    // selection_prob[i] = 1/pow(rank[i], alpha);
+
+//______________________________________________________

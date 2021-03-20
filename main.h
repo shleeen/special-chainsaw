@@ -17,6 +17,7 @@ const int NEURONS = 3;
 
 const int GENERATIONS = 1000;
 const int POP_SIZE = 50;
+const float MAX_EXP_OFFSPRING = 1.1;
 // const int MIN_GEN_DECOD = 0.1*GENERATIONS;
 
 const double RUN_DURATION = 300;

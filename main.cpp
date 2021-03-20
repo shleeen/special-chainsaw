@@ -35,11 +35,13 @@ float calcFitnessOverTrials(float fitness_list[20]){
         final_fitness += fitness_list[k] * ((21-rank[k])/20);
     }
 
+    // rescale fitness to [0, 1] instead of [0, 9] ??
+
     return final_fitness;
 }
 
-
-Individual assessIndividual(Individual indv, int cur_gen){  
+// , int cur_gen
+Individual assessIndividual(Individual indv){  
     Agent sender(NEURONS, GENES); //sender
     Agent receiver(NEURONS, GENES); //receiver
     receiver.updateTargetSensor(-1); //target sensor value for receiver is fixed
@@ -104,8 +106,6 @@ Individual assessIndividual(Individual indv, int cur_gen){
 
     // rank based fitness overall calc
     indv.fitness = calcFitnessOverTrials(fitness_across_trials);
-    // indv.fitness = (1.1 + (2.0 - 2.0*1.1)*((i-1.0)/(POP_SIZE-1)))/POP_SIZE;
-    // cout<<indv.fitness<<endl;
 
     return indv;
 }
@@ -116,11 +116,6 @@ Individual selectParent(Individual population[POP_SIZE]){
     float prob[POP_SIZE];
     float overall[POP_SIZE];
     float selection_prob[POP_SIZE];
-    float alpha = 1.1;
-
-    // if alpha > 1, stronger selection
-    // if alpha < 1, weaker selection 
-    // selection_probability[i] = 1/pow(rank[i], alpha);
 
     for (int k=0; k<POP_SIZE; k++){
         overall[k] = population[k].fitness;
@@ -128,16 +123,16 @@ Individual selectParent(Individual population[POP_SIZE]){
 
     findRank(POP_SIZE, overall, rank);
 
-    float Sum = 0.0;
+    float Sum = 1.0; // sum of probs is 1
     float total = 0.0;
 
     // # if probs[i] = 1   then i is the best indivdiual
     // # if probs[i] = 1/N then this is the worst individual
     for (int i=0; i<POP_SIZE; i++){
-        prob[i] = 1 / (1+rank[i]);
-        // selection_prob[i] = 1/pow(rank[i], alpha);
-        // Sum += selection_prob[i] * prob[i];
-        Sum += prob[i];
+        prob[i] = (MAX_EXP_OFFSPRING + (2.0 - 2.0*MAX_EXP_OFFSPRING)*(((POP_SIZE - rank[i])-1.0)/(POP_SIZE-1)))/POP_SIZE;
+
+        // prob[i] = 1 / (1+rank[i]);
+        // Sum += prob[i];
     }
     float r = randomNumberUniform(0, Sum);
     
@@ -147,6 +142,7 @@ Individual selectParent(Individual population[POP_SIZE]){
         if (total >= r){
             break;
         }
+        k++;
     }
 
     return population[k];
