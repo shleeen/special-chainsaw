@@ -58,7 +58,7 @@ bool checkAgentContact(float a, float b);
 void contactAgent(Agent &agent1, Agent &agent2);
 void moveAgent(Agent &agent, float stepSize);
 float calcFitnessOverTrials(float fitness_list[20]);
-Individual assessIndividual(Individual indv);
+Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen);
 Individual selectParent(Individual population[POP_SIZE]); 
 Individual mutateOffspring(Individual offspring);
 void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP_SIZE]);
@@ -151,7 +151,8 @@ void moveAgent(Agent &agent, float stepSize){
     // float step = (sigma(weight*output) - 0.5) * 0.2; // rescales to range -0.1, 0.1
 
     // rescales to range [-0.1*stepize, 0.1*stepSize]
-    float step = (sigma(weight*output) - 0.5) * stepSize * 0.2;
+    // WITH WEIGHT OR WITHOUT
+    float step = (sigma(output) - 0.5) * stepSize * 0.2;
 
     // if step is negative, it moves west
     //                else, moves east

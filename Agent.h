@@ -54,9 +54,11 @@ class Agent {
         float getMotorWeight();
         double getState(int index);
         double getOutput(int index);
+        // CTRNN getCTRNN(){return c;} //scream
 
         void stepAgent(double timestep);
 
+        void reset();
         void decodeGenome(float genome[GENES], float (&decoded)[GENES]);
         void updateNeuronParams(float genome[GENES], int flag);
         void updateSelfPosition(float new_location);

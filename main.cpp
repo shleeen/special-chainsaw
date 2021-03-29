@@ -41,9 +41,14 @@ float calcFitnessOverTrials(float fitness_list[20]){
 }
 
 // , int cur_gen
-Individual assessIndividual(Individual indv){  
-    Agent sender(NEURONS, GENES); //sender
-    Agent receiver(NEURONS, GENES); //receiver
+Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen){  
+    // Agent sender(NEURONS, GENES); //sender
+    // Agent receiver(NEURONS, GENES); //receiver
+
+    // reset Agent object
+    sender.reset();
+    receiver.reset();
+
     receiver.updateTargetSensor(-1); //target sensor value for receiver is fixed
 
     // change below flag based on generation count
@@ -87,7 +92,6 @@ Individual assessIndividual(Individual indv){
             float sender_pos = sender.getSelfPosition();
             if (sender_pos > 0.3){
                 sender.updateSelfPosition(0.3);
-                // cout<<"OUTSIDE RANGE aaaa"<<sender_pos<<" "<<sender.getSelfPosition()<<endl;   
             }
             else if (sender_pos < 0.0){
                 sender.updateSelfPosition(0.0);
@@ -149,12 +153,10 @@ Individual selectParent(Individual population[POP_SIZE]){
 }
 
 
-// to find: mutation rate ??
+// Function that mutates offspring by a value randomly picked from Gaussian distr
 Individual mutateOffspring(Individual offspring){
     Individual I;
     I.fitness = 0.0;
-
-    // decode genome??
 
     for (int i=0; i<GENES; i++){
         I.genome[i] = randomNumberGaussian(offspring.genome[i]);
@@ -164,6 +166,7 @@ Individual mutateOffspring(Individual offspring){
 }
 
 
+// Function to update old population variable with new pop
 void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP_SIZE]){
     for (int i=0; i<POP_SIZE; i++){
         population[i] = new_pop[i];
@@ -179,13 +182,16 @@ int main(int argc, char* argv[]){
     fout.open("data/BestFitVsGeneration.csv", ios::out);
     fmean.open("data/MeanFitness.csv", ios::out);
     
+    Agent sender(NEURONS, GENES); //sender
+    Agent receiver(NEURONS, GENES); //receiver
+
     // initialize population
     Individual population[POP_SIZE];
     initPopulation(population);
     
     // assess population
     for (int i=0; i<POP_SIZE; i++){
-        population[i] = assessIndividual(population[i]);
+        population[i] = assessIndividual(population[i], sender, receiver, 0);
     }
 
     int gen = 0;
@@ -199,7 +205,7 @@ int main(int argc, char* argv[]){
             Individual offspring = parent; //make a copy of parent
 
             Individual mutated_offspring = mutateOffspring(offspring);
-            mutated_offspring = assessIndividual(mutated_offspring);
+            mutated_offspring = assessIndividual(mutated_offspring, sender, receiver, gen+1);
 
             if (mutated_offspring.fitness > parent.fitness){
                 new_population[i] = mutated_offspring;
@@ -213,10 +219,8 @@ int main(int argc, char* argv[]){
         
         // --------  STATS CALC --------
         float sum_fit = 0.0;
-        // plot best fit vs generation
         float max_fit=0.0; int index;
         for(int k=0; k<POP_SIZE; k++ ){
-            // cout<<population[k].fitness<<" ";
             sum_fit += population[k].fitness;
             if(population[k].fitness > max_fit){        
                 max_fit = population[k].fitness;
@@ -228,10 +232,11 @@ int main(int argc, char* argv[]){
         // cout << "\n Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
         
         // only write to file, every 500 generations
-        // if (gen%500){
-        fout<<gen<<", "<<max_fit<<"\n";
-        fmean<<gen<<", "<< sum_fit/POP_SIZE <<"\n";
-        // }
+        if (gen%500 == 0){
+            cout<<"Writing to the file now"<<endl;
+            fout<<gen<<", "<< max_fit <<"\n";
+            fmean<<gen<<", "<< sum_fit/POP_SIZE <<"\n";
+        }
 
         gen++;
     }
