@@ -5,6 +5,7 @@
 #include <array>
 #include <random>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -18,6 +19,7 @@ const int NEURONS = 3;
 const int GENERATIONS = 1000;
 const int POP_SIZE = 50;
 const float MAX_EXP_OFFSPRING = 1.1;
+const float MUTATION_VARIANCE = 0.2;
 // const int MIN_GEN_DECOD = 0.1*GENERATIONS;
 
 const double RUN_DURATION = 300;
@@ -61,6 +63,7 @@ float calcFitnessOverTrials(float fitness_list[20]);
 Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen);
 Individual selectParent(Individual population[POP_SIZE]); 
 Individual mutateOffspring(Individual offspring);
+Individual mutationBeer(Individual offspring);
 void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP_SIZE]);
 
 
@@ -147,7 +150,7 @@ float clip(float x, float min, float max){
 void moveAgent(Agent &agent, float stepSize){
     double output = agent.getOutput(1);
     float cur_location = agent.getSelfPosition();
-    float weight = agent.getMotorWeight();
+    // float weight = agent.getMotorWeight();
     // float step = (sigma(weight*output) - 0.5) * 0.2; // rescales to range -0.1, 0.1
 
     // rescales to range [-0.1*stepize, 0.1*stepSize]

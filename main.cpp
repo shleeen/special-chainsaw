@@ -12,6 +12,7 @@ void initPopulation(Individual (&population)[POP_SIZE]){
     for (int i=0; i<POP_SIZE; i++){
         for (int j=0; j<GENES; j++){        
             population[i].genome[j] = randomNumberUniform(0.0, 1.0);
+            // population[i].genome[j] = UniformRandom(0.0, 1.0);
         }
         population[i].fitness = 0;
     }
@@ -68,10 +69,11 @@ Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int
     while (trials < 20){
         // draw target from uniform random distribution in range [0.5, 1.0]
         float target = randomNumberUniform(0.5, 1.0);
+        // float target = UniformRandom(0.5, 1.0);
 
         // draw the pos of bees from uniform random distribution in range of [0, 0.3]
-        sender.updateSelfPosition(randomNumberUniform(0.0, 0.3));
-        receiver.updateSelfPosition(randomNumberUniform(0.0, 0.3));
+        sender.updateSelfPosition(randomNumberUniform(0.0, 0.3)); //UniformRandom(0.0, 0.3));
+        receiver.updateSelfPosition(randomNumberUniform(0.0, 0.3)); //UniformRandom(0.0, 0.3));
 
         // SIMULATE THE BEES
         for (double time = TIMESTEP_SIZE; time <= RUN_DURATION; time += TIMESTEP_SIZE) {
@@ -119,7 +121,6 @@ Individual selectParent(Individual population[POP_SIZE]){
     float rank[POP_SIZE];
     float prob[POP_SIZE];
     float overall[POP_SIZE];
-    float selection_prob[POP_SIZE];
 
     for (int k=0; k<POP_SIZE; k++){
         overall[k] = population[k].fitness;
@@ -139,6 +140,7 @@ Individual selectParent(Individual population[POP_SIZE]){
         // Sum += prob[i];
     }
     float r = randomNumberUniform(0, Sum);
+    // float r = UniformRandom(0, Sum);
     
     int k = 0;
     while (k <= POP_SIZE){
@@ -162,6 +164,50 @@ Individual mutateOffspring(Individual offspring){
         I.genome[i] = randomNumberGaussian(offspring.genome[i]);
     }
 
+    return I;
+}
+
+
+// Mutation function thats similar to Beer's TSearch
+Individual mutationBeer(Individual offspring){
+    Individual I;
+    I.fitness = 0.0;
+
+    float random_muts[GENES], sum_sq[GENES];
+    float total = 0.0;
+    float normalized_muts[GENES];
+
+    for (int i = 0; i<GENES; i++){
+        // # random perturbation for each gene
+        random_muts[i] = GaussianRandom(0.0, 1.0); // from random.cpp
+        sum_sq[i] = pow(random_muts[i], 2);
+
+        // Calc total sum of the sum squares
+        total += sum_sq[i];
+    }
+
+    // normalize the random muts
+    float norm_total = 0.0;
+    for (int j=0; j<GENES; j++){
+        normalized_muts[j] = random_muts[j]/total;
+        norm_total += normalized_muts[j];
+    }
+  
+    // calc mutation size based on gauss random nno.
+    float mutation_size = GaussianRandom(0.0, MUTATION_VARIANCE);
+    float muts[GENES];
+
+    // cout<<"Mutation size --> "<<mutation_size<<endl;
+
+    // calc the actual mutation value
+    for (int i=0; i<GENES; i++){
+        muts[i] = normalized_muts[i]*mutation_size;    
+        I.genome[i] = offspring.genome[i] + muts[i];
+    }
+
+    // clip genes to (0,1) or (-1,1)
+    // genes = [min(1,max(0,gene)) for gene in genes]
+    
     return I;
 }
 
@@ -204,7 +250,7 @@ int main(int argc, char* argv[]){
             Individual parent = selectParent(population);
             Individual offspring = parent; //make a copy of parent
 
-            Individual mutated_offspring = mutateOffspring(offspring);
+            Individual mutated_offspring = mutationBeer(offspring); //mutateOffspring(offspring); 
             mutated_offspring = assessIndividual(mutated_offspring, sender, receiver, gen+1);
 
             if (mutated_offspring.fitness > parent.fitness){
@@ -218,8 +264,8 @@ int main(int argc, char* argv[]){
         updatePopulation(population, new_population);
         
         // --------  STATS CALC --------
-        float sum_fit = 0.0;
-        float max_fit=0.0; int index;
+        float sum_fit = 0.0, max_fit = 0.0;
+        int index;
         for(int k=0; k<POP_SIZE; k++ ){
             sum_fit += population[k].fitness;
             if(population[k].fitness > max_fit){        
@@ -232,7 +278,7 @@ int main(int argc, char* argv[]){
         // cout << "\n Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
         
         // only write to file, every 500 generations
-        if (gen%500 == 0){
+        if (gen%100 == 0){
             cout<<"Writing to the file now"<<endl;
             fout<<gen<<", "<< max_fit <<"\n";
             fmean<<gen<<", "<< sum_fit/POP_SIZE <<"\n";
