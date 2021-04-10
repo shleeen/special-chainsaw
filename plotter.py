@@ -29,17 +29,18 @@ def plotDiachronic():
 
     f1 = plt.figure()
     plt.suptitle('Target = 0.8 ')
-    #plot 1:
+    #plot 1: OVERALL
     plt.subplot(1, 3, 1)
     plt.plot(time, s_pos, label="sender")
     plt.plot(time, r_pos, label="receiver")
     plt.plot(time, target, linestyle='dashed', label="target")
+    plt.axhspan(0.0, 0.3, color='tab:blue', alpha=0.1)
     plt.legend()
     plt.xlabel('Time')
     plt.ylabel('Position')
     plt.ylim(-1.5, 2)
 
-    #plot 2:
+    #plot 2: RECEIVER
     plt.subplot(1, 3, 2)
     plt.plot(time, r_pos, label="position sensor", color="tab:orange")
     plt.plot(time, r_contact, label="contact sensor", color="rebeccapurple")
@@ -49,11 +50,12 @@ def plotDiachronic():
     plt.ylabel('Receiver\'s Sensor Value')
     plt.ylim(-1.5, 2)
 
-    #plot 3:
+    #plot 3: SENDER
     plt.subplot(1, 3, 3)
     plt.plot(time, s_pos, label="position sensor")
     plt.plot(time, s_contact, label="contact sensor", color="rebeccapurple")
     plt.plot(time, s_target, label="target sensor", color="maroon")
+    plt.axhspan(0.0, 0.3, color='tab:blue', alpha=0.1)
     plt.legend()
     plt.xlabel('Time')
     plt.ylabel('Sender\'s Sensor Value')
