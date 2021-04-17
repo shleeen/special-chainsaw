@@ -153,6 +153,25 @@ def plotMeanFinalPosition():
     plt.savefig('plots/MeanFinalPos.png')
 
 
+def plotContactTime():
+    target=[]
+    mean_contact_time=[]
+    
+    csvfile = open('data/MeanContactTime.csv', 'r') 
+    plots= csv.reader(csvfile, delimiter=',')
+    for row in plots:
+        target.append(float(row[0]))
+        mean_contact_time.append(float(row[1]))
+
+    plt.figure()
+    plt.plot(target, mean_contact_time, marker='o')
+
+    plt.title('Mean Contact Time vs Target position')
+    plt.xlabel('Target Position')
+    plt.ylabel('Mean contact time')
+    plt.savefig('plots/MeanContactTime.png')
+
+
 def main():
     # call the plotter functions here
     meanFitvsGenerations()
@@ -160,6 +179,7 @@ def main():
     plotDiachronic()
     absMeanDistance()
     plotMeanFinalPosition()
+    plotContactTime()
 
     print("something has been plotted. :) ")
 
