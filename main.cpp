@@ -11,8 +11,8 @@ void initPopulation(Individual (&population)[POP_SIZE]){
     // srand((unsigned int)time(NULL));
     for (int i=0; i<POP_SIZE; i++){
         for (int j=0; j<GENES; j++){        
-            population[i].genome[j] = randomNumberUniform(0.0, 1.0);
-            // population[i].genome[j] = UniformRandom(0.0, 1.0);
+            // population[i].genome[j] = randomNumberUniform(0.0, 1.0);
+            population[i].genome[j] = UniformRandom(0.0, 1.0);
         }
         population[i].fitness = 0;
     }
@@ -68,12 +68,12 @@ Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int
 
     while (trials < 20){
         // draw target from uniform random distribution in range [0.5, 1.0]
-        float target = randomNumberUniform(0.5, 1.0);
-        // float target = UniformRandom(0.5, 1.0);
+        // float target = randomNumberUniform(0.5, 1.0);
+        float target = UniformRandom(0.5, 1.0);
 
         // draw the pos of bees from uniform random distribution in range of [0, 0.3]
-        sender.updateSelfPosition(randomNumberUniform(0.0, 0.3)); //UniformRandom(0.0, 0.3));
-        receiver.updateSelfPosition(randomNumberUniform(0.0, 0.3)); //UniformRandom(0.0, 0.3));
+        sender.updateSelfPosition(UniformRandom(0.0, 0.3)); //randomNumberUniform(0.0, 0.3));
+        receiver.updateSelfPosition(UniformRandom(0.0, 0.3)); //randomNumberUniform(0.0, 0.3)); 
 
         // SIMULATE THE BEES
         for (double time = TIMESTEP_SIZE; time <= RUN_DURATION; time += TIMESTEP_SIZE) {
@@ -139,8 +139,8 @@ Individual selectParent(Individual population[POP_SIZE]){
         // prob[i] = 1 / (1+rank[i]);
         // Sum += prob[i];
     }
-    float r = randomNumberUniform(0, Sum);
-    // float r = UniformRandom(0, Sum);
+    // float r = randomNumberUniform(0, Sum);
+    float r = UniformRandom(0, Sum);
     
     int k = 0;
     while (k <= POP_SIZE){
@@ -161,7 +161,8 @@ Individual mutateOffspring(Individual offspring){
     I.fitness = 0.0;
 
     for (int i=0; i<GENES; i++){
-        I.genome[i] = randomNumberGaussian(offspring.genome[i]);
+        I.genome[i] = GaussianRandom(offspring.genome[i], 0.2);
+        // I.genome[i] = randomNumberGaussian(offspring.genome[i]);
     }
 
     return I;
@@ -250,7 +251,8 @@ int main(int argc, char* argv[]){
             Individual parent = selectParent(population);
             Individual offspring = parent; //make a copy of parent
 
-            Individual mutated_offspring = mutationBeer(offspring); //mutateOffspring(offspring); 
+            // Individual mutated_offspring = mutateOffspring(offspring);  
+            Individual mutated_offspring = mutationBeer(offspring); 
             mutated_offspring = assessIndividual(mutated_offspring, sender, receiver, gen+1);
 
             if (mutated_offspring.fitness > parent.fitness){

@@ -31,7 +31,7 @@ void Agent::reset(){
     //     c.SetConnectionWeight(i, 2, 0.0);
     //     c.SetConnectionWeight(i, 3, 0.0);
     // }
-
+    //sets all the params in the CTRNN to 0
     c.SetCircuitSize(neurons_count);
 
     self_position = 0.0;
@@ -60,7 +60,7 @@ void Agent::updateNeuronParams(float genome[GENES], int flag){
     }
     // else don't bound the genome
     else{
-        cout<<"not decoding the genome :') "<<endl;
+        // cout<<"not decoding the genome :') "<<endl;
         for (int i = 0; i<GENES; i++){
             decoded[i] = genome[i];
 
