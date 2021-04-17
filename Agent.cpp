@@ -12,7 +12,6 @@ Agent::Agent(int neurons, int genes){
     contact_sensor = 0.0;
     target_sensor = 0.0;
     contact_weight = 0.0;
-    motor_weight = 0.0;
     self_pos_weight = 0.0;
     target_weight = 0.0;
     
@@ -31,14 +30,14 @@ void Agent::reset(){
     //     c.SetConnectionWeight(i, 2, 0.0);
     //     c.SetConnectionWeight(i, 3, 0.0);
     // }
-    //sets all the params in the CTRNN to 0
+    //sets all the internal CTRNN params to 0
     c.SetCircuitSize(neurons_count);
 
     self_position = 0.0;
     contact_sensor = 0.0;
     target_sensor = 0.0;
+
     contact_weight = 0.0;
-    motor_weight = 0.0;
     self_pos_weight = 0.0;
     target_weight = 0.0;
 }
@@ -86,9 +85,8 @@ void Agent::updateNeuronParams(float genome[GENES], int flag){
     }
 
     contact_weight = decoded[18];
-    motor_weight = decoded[19];
-    target_weight = decoded[20];
-    self_pos_weight = decoded[21];
+    target_weight = decoded[19];
+    self_pos_weight = decoded[20];
 }
 
 
@@ -124,10 +122,6 @@ int Agent::getContactSensor(){
 
 float Agent::getTargetSensor(){
     return target_sensor;
-}
-
-float Agent::getMotorWeight(){
-    return motor_weight;
 }
 
 double Agent::getState(int index){
