@@ -1,14 +1,9 @@
-// ***************************************
-// trying to do the thing for project
-// ***************************************
-
 #include "main.h"
 
 /***
  ***   GA FUNCTIONS
 ***/
 void initPopulation(Individual (&population)[POP_SIZE]){
-    // srand((unsigned int)time(NULL));
     for (int i=0; i<POP_SIZE; i++){
         for (int j=0; j<GENES; j++){        
             // population[i].genome[j] = randomNumberUniform(0.0, 1.0);
@@ -21,12 +16,6 @@ void initPopulation(Individual (&population)[POP_SIZE]){
 
 
 float calcFitnessOverTrials(float fitness_list[20]){
-    // for (int k=0; k<POP_SIZE; k++){
-    //     overall[k] = population[k].fitness;
-    // }
-    //does list need to be sorted?
-    // std::sort(fitness_overall, fitness_overall + POP_SIZE, std::greater<float>());
-
     float final_fitness = 0.0;
     float rank[20];
     findRank(20, fitness_list, rank);
@@ -41,11 +30,8 @@ float calcFitnessOverTrials(float fitness_list[20]){
     return final_fitness;
 }
 
-// , int cur_gen
-Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen){  
-    // Agent sender(NEURONS, GENES); //sender
-    // Agent receiver(NEURONS, GENES); //receiver
 
+Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen){  
     // reset Agent object
     sender.reset();
     receiver.reset();
@@ -240,7 +226,7 @@ int main(int argc, char* argv[]){
     }
 
     int gen = 0;
-    while(gen <= GENERATIONS){ // loop: repeat until stopping condition
+    while(gen <= GENERATIONS){
         Individual new_population[POP_SIZE];
 
         for (int i=0; i<POP_SIZE; i++) {
@@ -264,7 +250,7 @@ int main(int argc, char* argv[]){
 
         updatePopulation(population, new_population);
         
-        // --------  STATS CALC --------
+        // ---------------  STATS CALC ------------------
         float sum_fit = 0.0, max_fit = 0.0;
         int index;
         for(int k=0; k<POP_SIZE; k++ ){
@@ -278,16 +264,17 @@ int main(int argc, char* argv[]){
         cout<<"Generation "<<gen<<" complete. "<<" Best fit = " << max_fit <<endl;
         // cout << "\n Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
         
-        // only write to file, every 500 generations
+        // write to file every x generations
         if (gen!=0 && gen%100 == 0){
             cout<<"------------------------------------------------\n";
-            cout<<"Writing to the file now"<<endl;
+            cout<<"Writing to the file..."<<endl;
             cout<<"mean: "<<sum_fit/POP_SIZE<<endl;
             cout<<"------------------------------------------------\n";
 
             fout<<gen<<", "<< max_fit <<"\n";
             fmean<<gen<<", "<< sum_fit/POP_SIZE <<"\n";
         } 
+        // ----------------------------------------------
 
         // INC GENERATION COUNTER
         gen++;
