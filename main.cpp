@@ -90,6 +90,7 @@ Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int
 
             // update location of c1 - based on motor neuron output
             moveAgent(sender, TIMESTEP_SIZE);
+
             // clip the senderrrr
             float sender_pos = sender.getSelfPosition();
             if (sender_pos > 0.3){
@@ -170,46 +171,39 @@ Individual mutateOffspring(Individual offspring){
 
 
 // Mutation function thats similar to Beer's TSearch
-Individual mutationBeer(Individual offspring){
-    Individual I;
-    I.fitness = 0.0;
+void beerMutation(Individual &offspring){
+    float random_muts[GENES];
+    float sum_sq = 0.0;
 
-    float random_muts[GENES], sum_sq[GENES];
-    float total = 0.0;
-    float normalized_muts[GENES];
+    float mutation_size = GaussianRandom(0.0, MUTATION_VARIANCE);
 
     for (int i = 0; i<GENES; i++){
-        // # random perturbation for each gene
-        random_muts[i] = GaussianRandom(0.0, 1.0); // from random.cpp
-        sum_sq[i] = pow(random_muts[i], 2);
+        // random perturbation for each gene
+        random_muts[i] = GaussianRandom(0.0, 1.0);
 
-        // Calc total sum of the sum squares
-        total += sum_sq[i];
+        // sum the squares of each random mut
+        sum_sq += random_muts[i] * random_muts[i];
     }
+
+    sum_sq = sqrt(sum_sq);
 
     // normalize the random muts
-    float norm_total = 0.0;
     for (int j=0; j<GENES; j++){
-        normalized_muts[j] = random_muts[j]/total;
-        norm_total += normalized_muts[j];
+        random_muts[j] = random_muts[j]/sum_sq;
     }
   
-    // calc mutation size based on gauss random nno.
-    float mutation_size = GaussianRandom(0.0, MUTATION_VARIANCE);
-    float muts[GENES];
-
-    // cout<<"Mutation size --> "<<mutation_size<<endl;
-
-    // calc the actual mutation value
+    // update the offspring with mutation amt
     for (int i=0; i<GENES; i++){
-        muts[i] = normalized_muts[i]*mutation_size;    
-        I.genome[i] = offspring.genome[i] + muts[i];
-    }
+      offspring.genome[i] += random_muts[i]*mutation_size;
 
-    // clip genes to (0,1) or (-1,1)
-    // genes = [min(1,max(0,gene)) for gene in genes]
-    
-    return I;
+      // clip genes to [0,1] or [-1,1]
+      if (offspring.genome[i] < 0.0){
+        offspring.genome[i] = 0.0;
+      }
+      else if (offspring.genome[i] > 1.0){
+        offspring.genome[i] = 1.0;
+      }
+    }
 }
 
 
@@ -225,10 +219,14 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
  ***    MAIN FUNCTION
 ***/
 int main(int argc, char* argv[]){
-    fstream fout, fmean;
+    // set seed for all random number generation
+    // SetRandomSeed(3);
+
+    fstream fout, fmean, finalpop;
     fout.open("data/BestFitVsGeneration.csv", ios::out);
     fmean.open("data/MeanFitness.csv", ios::out);
-    
+    finalpop.open("data/final_population.csv", ios::out);
+
     Agent sender(NEURONS, GENES); //sender
     Agent receiver(NEURONS, GENES); //receiver
 
@@ -252,8 +250,9 @@ int main(int argc, char* argv[]){
             Individual offspring = parent; //make a copy of parent
 
             // Individual mutated_offspring = mutateOffspring(offspring);  
-            Individual mutated_offspring = mutationBeer(offspring); 
-            mutated_offspring = assessIndividual(mutated_offspring, sender, receiver, gen+1);
+            // Individual mutated_offspring = beerMutation(offspring); 
+            beerMutation(offspring);
+            Individual mutated_offspring = assessIndividual(offspring, sender, receiver, gen+1);
 
             if (mutated_offspring.fitness > parent.fitness){
                 new_population[i] = mutated_offspring;
@@ -280,12 +279,17 @@ int main(int argc, char* argv[]){
         // cout << "\n Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
         
         // only write to file, every 500 generations
-        if (gen%100 == 0){
+        if (gen!=0 && gen%100 == 0){
+            cout<<"------------------------------------------------\n";
             cout<<"Writing to the file now"<<endl;
+            cout<<"mean: "<<sum_fit/POP_SIZE<<endl;
+            cout<<"------------------------------------------------\n";
+
             fout<<gen<<", "<< max_fit <<"\n";
             fmean<<gen<<", "<< sum_fit/POP_SIZE <<"\n";
-        }
+        } 
 
+        // INC GENERATION COUNTER
         gen++;
     }
 
@@ -310,6 +314,18 @@ int main(int argc, char* argv[]){
         cout<<population[index].genome[i]<<endl;
         agent_file<<population[index].genome[i]<<"\n";
     }
+
+    // Save final population genotype
+    finalpop<<"FITNESS\tGENES...\n";
+    for(int k=0; k<POP_SIZE; k++ ){
+        finalpop<<population[k].fitness<<"\t";
+        for (int l=0; l<GENES; l++){
+            finalpop<<population[k].genome[l]<<"\t";
+        }
+        finalpop<<"\n";
+    }
+    finalpop.close();
+
 
     // close files
     fout.close();

@@ -16,11 +16,14 @@ using namespace std;
 const int NEURONS = 3;
 // const int GENES = (NEURONS+3)*NEURONS;
 
-const int GENERATIONS = 1000;
+const int GENERATIONS = 5000;
 const int POP_SIZE = 50;
 const float MAX_EXP_OFFSPRING = 1.1;
 const float MUTATION_VARIANCE = 0.2;
 // const int MIN_GEN_DECOD = 0.1*GENERATIONS;
+
+const float ALLELE_MIN = 0.0;
+const float ALLELE_MAX = 1.0;
 
 const double RUN_DURATION = 300;
 const double TIMESTEP_SIZE = 0.1; // or 0.01
@@ -37,7 +40,7 @@ Plot p;
 // chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 |
 //              tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | 
 //              tau3 | bias3 | gain3 | weight31 | weight32 | weight33 |
-//              contact_weight | motor_weight | self-pos_weight | target_weight 
+//              contact_weight | self-pos_weight | target_weight 
 struct Individual{
     float genome[GENES]; //aka Chromosome, Genotype
     float fitness;
@@ -63,7 +66,7 @@ float calcFitnessOverTrials(float fitness_list[20]);
 Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen);
 Individual selectParent(Individual population[POP_SIZE]); 
 Individual mutateOffspring(Individual offspring);
-Individual mutationBeer(Individual offspring);
+void beerMutation(Individual &offspring);
 void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP_SIZE]);
 
 
@@ -110,7 +113,7 @@ void findRank(int size, float *array, float *rank){
     } 
 }
 
-
+/*
 // a & b -> location of respective agent
 bool checkAgentContact(float a, float b){
     // float a_low = a - 0.2;
@@ -123,11 +126,17 @@ bool checkAgentContact(float a, float b){
     }
 
     return false;
-}
+}*/
 
+
+// a & b -> location of respective agent
 void contactAgent(Agent &agent1, Agent &agent2){
+    float a = agent1.getSelfPosition();
+    float b = agent2.getSelfPosition();
+
     // if they are in range of each other, then signal is 1
-    if (checkAgentContact(agent1.getSelfPosition(), agent2.getSelfPosition())){ 
+    // if distance between a and b is less than 0.4, then in range
+    if (abs(a-b) < 0.4){ 
         agent1.updateContactSensor(1);
         agent2.updateContactSensor(1);
     }
@@ -154,7 +163,6 @@ void moveAgent(Agent &agent, float stepSize){
     // float step = (sigma(weight*output) - 0.5) * 0.2; // rescales to range -0.1, 0.1
 
     // rescales to range [-0.1*stepize, 0.1*stepSize]
-    // WITH WEIGHT OR WITHOUT
     float step = (sigma(output) - 0.5) * stepSize * 0.2;
 
     // if step is negative, it moves west
