@@ -11,27 +11,28 @@ Agent::Agent(int neurons, int genes){
     self_position = 0.0;
     contact_sensor = 0.0;
     target_sensor = 0.0;
+
     contact_weight = 0.0;
     self_pos_weight = 0.0;
     target_weight = 0.0;
     
-    //  DO I NEED TO RANDOMIZE
-    // c.RandomizeCircuitState(-0.5,0.5); //whats the range
+    // TODO: Do i need to do this, or set it all to 0
+    // c.RandomizeCircuitState(-0.5,0.5); // why this range
+
+    for (int i=1; i<=neurons_count; i++){ // since 3 neurons
+        c.SetNeuronTimeConstant(i, 0.0);
+        c.SetNeuronGain(i, 1.0); //gain always fixed to 1
+        c.SetNeuronState(i, 0.0);
+    }
+
 }
 
 // Function to reset all values in the Agent object, include CTRNN parameters
 void Agent::reset(){
-    // cout<< c <<endl;
-    // for (int i=1; i<=3; i++){ // since 3 neurons
-    //     c.SetNeuronTimeConstant(i, 0.0);
-    //     c.SetNeuronBias(i, 0.0);
-    //     c.SetNeuronGain(i, 1.0); //gain always fixed to 1
-    //     c.SetConnectionWeight(i, 1, 0.0);
-    //     c.SetConnectionWeight(i, 2, 0.0);
-    //     c.SetConnectionWeight(i, 3, 0.0);
-    // }
     //sets all the internal CTRNN params to 0
     c.SetCircuitSize(neurons_count);
+
+    // c.RandomizeCircuitState(-0.5, 0.5);
 
     self_position = 0.0;
     contact_sensor = 0.0;
@@ -40,6 +41,12 @@ void Agent::reset(){
     contact_weight = 0.0;
     self_pos_weight = 0.0;
     target_weight = 0.0;
+
+    for (int i=1; i<=neurons_count; i++){
+        c.SetNeuronTimeConstant(i, 0.0);
+        c.SetNeuronGain(i, 1.0); //gain always fixed to 1
+        c.SetNeuronState(i, 0.0);
+    }
 }
 
 // map values from [0,1] to [x,y]
@@ -59,7 +66,6 @@ void Agent::updateNeuronParams(float genome[GENES], int flag){
     }
     // else don't bound the genome
     else{
-        // cout<<"not decoding the genome :') "<<endl;
         for (int i = 0; i<GENES; i++){
             decoded[i] = genome[i];
 
@@ -85,8 +91,8 @@ void Agent::updateNeuronParams(float genome[GENES], int flag){
     }
 
     contact_weight = decoded[18];
-    target_weight = decoded[19];
-    self_pos_weight = decoded[20];
+    self_pos_weight = decoded[19];
+    target_weight = decoded[20];
 }
 
 
@@ -133,38 +139,17 @@ double Agent::getOutput(int index){
 }
 
 
-ostream& operator<<(ostream& os, Agent& agt){
-    // os <<"Neuron 1: \n";
-    // os <<"Tau: "<< agt.c. <<"\n";
-    // os <<"Bias: "<< agt.c.taus(1)<<"\n";
-    // os <<"Gain: "<< agt.c.taus(1)<<"\n";
-    // os <<"Weight : "<< agt.c.taus(1)<<"\n";
+ostream& operator<<(ostream& os, Agent agt){    
+    cout<<agt.c;
+    os<<"\n";
+    os << "Self position \t"<< agt.self_position<<"\n";
+    os << "Self position weight \t"<< agt.self_pos_weight<<"\n";
 
-    // os <<"Neuron 2: \n";
+    os << "Contact sensor \t"<< agt.contact_sensor<<"\n";
+    os << "Contact Sensor weight \t"<< agt.contact_weight<<"\n";
 
-    cout<<"TAU \t GAIN \t BIAS \t WEIGHTi1 \t WEIGHTi2 \t WEIGHTi3"<<endl;
-    // for (int i =0; i<3; i++){
-    //     // cout<<agt.c.taus(i)<<"\t"<<endl;
-    //     cout<<"potato"<<endl;
-    // }
-    // double temp = agt.getState(1);
-    // CTRNN temp = agt.c;
-    // double temp = agt.c.biases(1);
-    // CTRNN temp = agt.getCTRNN();
-    // cout<< agt.getCTRNN() <<endl;
-    
-
-
-    // os << "Self position \t"<< agt.self_position<<"\n";
-    // os << "Self position weight \t"<< agt.self_pos_weight<<"\n";
-
-    // os << "Contact sensor \t"<< agt.contact_sensor<<"\n";
-    // os << "Contact Sensor weight \t"<< agt.contact_weight<<"\n";
-
-    // os << "Target sensor: \t"<< agt.target_sensor<<"\n";
-    // os << "Target sensor weight: \t"<<agt.target_weight<<"\n";
-
-    // os << "Motor Weight \t"<< agt.motor_weight<<"\n";
+    os << "Target sensor: \t"<< agt.target_sensor<<"\n";
+    os << "Target sensor weight: \t"<<agt.target_weight<<"\n";
 
     return os;
 }
