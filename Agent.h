@@ -9,9 +9,9 @@ struct range{
 
 // chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 | tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | tau3 | bias3 | gain3 | weight31 | weight32 | weight33 | 
 //              contact_weight | self-pos_weight | target_weight 
-const range GENES_RANGE[GENES] = {{ .min = 0.0, .max = 32.0 },  { .min = -16.0, .max = 16.0 },  { .min = -16.0, .max = 16.0 },  { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, 
-                                { .min = 0.0, .max = 32.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 },
-                                { .min = 0.0, .max = 32.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 },
+const range GENES_RANGE[GENES] = {{ .min = 0.0, .max = 30.0 },  { .min = -16.0, .max = 16.0 },  { .min = -16.0, .max = 16.0 },  { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, 
+                                { .min = 0.0, .max = 30.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 },
+                                { .min = 0.0, .max = 30.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 }, { .min = -16.0, .max = 16.0 },
                                 { .min = -16.0, .max = 16.0 }, //contact weight
                                 // { .min = -16.0, .max = 16.0 }, //motor weight
                                 { .min = -16.0, .max = 16.0 }, //self position weight
@@ -61,6 +61,7 @@ class Agent {
         void stepAgent(double timestep);
 
         void reset();
+        void resetState();
         void decodeGenome(float genome[GENES], float (&decoded)[GENES]);
         void updateNeuronParams(float genome[GENES], int flag);
         void updateSelfPosition(float new_location);

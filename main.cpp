@@ -1,5 +1,7 @@
 #include "main.h"
 
+fstream fperf;
+
 /***
  ***   GA FUNCTIONS
 ***/
@@ -31,13 +33,9 @@ float calcFitnessOverTrials(float fitness_list[20]){
 }
 
 
-Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen){  
-    // reset Agent object
-    sender.reset();
-    receiver.reset();
-
-    receiver.updateTargetSensor(-1); //target sensor value for receiver is fixed
-
+float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen){
+    fperf.open("data/TargetFinalPos.csv", ios::out);
+    
     // change below flag based on generation count
     int flag = 1;
     // if (cur_gen < 0.1*GENERATIONS)
@@ -45,14 +43,19 @@ Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int
     // else 
     //     flag = 0;
 
-    // set Agent params according to the genome
-    sender.updateNeuronParams(indv.genome, flag);
-    receiver.updateNeuronParams(indv.genome, flag);
-
     int trials = 0;
-    float fitness_across_trials[20];
+    float fitness_across_trials[20], overall_fitness = 0.0;
 
     while (trials < 20){
+        // reset Agent object
+        sender.resetState();
+        receiver.resetState();
+        receiver.updateTargetSensor(-1); //target sensor value for receiver is fixed
+
+        // set Agent params according to the genome
+        sender.updateNeuronParams(indv.genome, flag);
+        receiver.updateNeuronParams(indv.genome, flag);
+
         // draw target from uniform random distribution in range [0.5, 1.0]
         // float target = randomNumberUniform(0.5, 1.0);
         float target = UniformRandom(0.5, 1.0);
@@ -90,7 +93,10 @@ Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int
             
             moveAgent(receiver, TIMESTEP_SIZE);
         }
-        
+
+        // plot perfect fitness/strategy        
+        fperf<<cur_gen-1<<", "<<target<<", "<<receiver.getSelfPosition()<<"\n";
+
         // update fitness of indv
         fitness_across_trials[trials] = max(0.0, 1.0 - (abs(receiver.getSelfPosition() - target)));
                 
@@ -98,9 +104,11 @@ Individual assessIndividual(Individual indv, Agent &sender, Agent &receiver, int
     }
 
     // rank based fitness overall calc
-    indv.fitness = calcFitnessOverTrials(fitness_across_trials);
+    overall_fitness = calcFitnessOverTrials(fitness_across_trials);
 
-    return indv;
+    fperf.close();
+
+    return overall_fitness;
 }
 
 
@@ -227,7 +235,7 @@ int main(int argc, char* argv[]){
     
     // assess population
     for (int i=0; i<POP_SIZE; i++){
-        population[i] = assessIndividual(population[i], sender, receiver, 0);
+        population[i].fitness = assessIndividual(population[i], sender, receiver, 0);
     }
 
     int gen = 0;
@@ -243,7 +251,8 @@ int main(int argc, char* argv[]){
             // Individual mutated_offspring = mutateOffspring(offspring);  
             // Individual mutated_offspring = beerMutation(offspring); 
             beerMutation(offspring);
-            Individual mutated_offspring = assessIndividual(offspring, sender, receiver, gen+1);
+            Individual mutated_offspring = offspring;
+            mutated_offspring.fitness = assessIndividual(offspring, sender, receiver, gen+1);
 
             if (mutated_offspring.fitness > parent.fitness){
                 new_population[i] = mutated_offspring;

@@ -17,7 +17,7 @@ Agent::Agent(int neurons, int genes){
     target_weight = 0.0;
     
     // TODO: Do i need to do this, or set it all to 0
-    // c.RandomizeCircuitState(-0.5,0.5); // why this range
+    // c.RandomizeCircuitState(-0.5,0.5);
 
     for (int i=1; i<=neurons_count; i++){ // since 3 neurons
         c.SetNeuronTimeConstant(i, 0.0);
@@ -49,10 +49,15 @@ void Agent::reset(){
     }
 }
 
+
+void Agent::resetState(){
+    c.RandomizeCircuitState(0.0, 0.0);
+}
+
 // map values from [0,1] to [x,y]
 void Agent::decodeGenome(float genome[GENES], float (&decoded)[GENES]){
     for (int i = 0; i<GENES; i++){
-        decoded[i] = GENES_RANGE[i].min + ((GENES_RANGE[i].max - GENES_RANGE[i].min) * (genome[i]));
+        decoded[i] = GENES_RANGE[i].min + (((GENES_RANGE[i].max - GENES_RANGE[i].min)/(1-0)) * (genome[i]));
     }
 }
 
