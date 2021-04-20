@@ -18,7 +18,7 @@ void initPopulation(Individual (&population)[POP_SIZE]){
 float calcFitnessOverTrials(float fitness_list[20]){
     float final_fitness = 0.0;
     float rank[20];
-    findRank(20, fitness_list, rank);
+    findRankAscending(20, fitness_list, rank);
 
     for (int k=0; k<20; k++){
         // final_fitness += fitness_list[k] * (1.0/rank[k]);
@@ -113,18 +113,23 @@ Individual selectParent(Individual population[POP_SIZE]){
         overall[k] = population[k].fitness;
     }
 
-    findRank(POP_SIZE, overall, rank);
+    // rank 1 -> best fitness
+    // rank N -> lowest fitness
+    findRankDescending(POP_SIZE, overall, rank);
 
-    float Sum = 1.0; // sum of probs is 1
+    // TODO: Sum is not 1!?? for this (POP_SIZE - rank[i]).. but that shouldnt be tru...??
+    float Sum = 0.0; // sum of probs is 1
     float total = 0.0;
 
-    // # if probs[i] = 1   then i is the best indivdiual
-    // # if probs[i] = 1/N then this is the worst individual
     for (int i=0; i<POP_SIZE; i++){
-        prob[i] = (MAX_EXP_OFFSPRING + (2.0 - 2.0*MAX_EXP_OFFSPRING)*(((POP_SIZE - rank[i])-1.0)/(POP_SIZE-1)))/POP_SIZE;
+        // Low selection pressure, from Beer
+        // prob[i] = (MAX_EXP_OFFSPRING + (2.0 - 2.0*MAX_EXP_OFFSPRING)*(((POP_SIZE - rank[i])-1.0)/(POP_SIZE-1)))/POP_SIZE;
+        prob[i] = (MAX_EXP_OFFSPRING + (2.0 - 2.0*MAX_EXP_OFFSPRING)*((rank[i]-1)/(POP_SIZE-1)))/POP_SIZE;
 
+        // High selection pressure
         // prob[i] = 1 / (1+rank[i]);
-        // Sum += prob[i];
+
+        Sum += prob[i];
     }
     // float r = randomNumberUniform(0, Sum);
     float r = UniformRandom(0, Sum);

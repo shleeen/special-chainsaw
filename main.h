@@ -16,8 +16,8 @@ using namespace std;
 const int NEURONS = 3;
 // const int GENES = (NEURONS+3)*NEURONS;
 
-const int GENERATIONS = 5000;
-const int POP_SIZE = 50;
+const int GENERATIONS = 2300;
+const int POP_SIZE = 10;
 const float MAX_EXP_OFFSPRING = 1.1;
 const float MUTATION_VARIANCE = 0.2;
 // const int MIN_GEN_DECOD = 0.1*GENERATIONS;
@@ -52,7 +52,8 @@ struct Individual{
  */
 float randomNumberUniform(float start, float end);
 float randomNumberGaussian(float mean);
-void findRank(int size, float *array, float *rank);
+void findRankAscending(int size, float *array, float *rank);
+void findRankDescending(int size, float *array, float *rank);
 
 
 /*
@@ -97,7 +98,7 @@ float randomNumberGaussian(float mean){
 }
 
 // rank of 1 -> smallest element, rank of N -> largest element
-void findRank(int size, float *array, float *rank){      
+void findRankAscending(int size, float *array, float *rank){      
     for (int i = 0; i < size; i++) { 
         int r = 1, s = 1; 
           
@@ -112,6 +113,24 @@ void findRank(int size, float *array, float *rank){
         rank[i] = r + (float)(s - 1) / (float) 2;
     } 
 }
+
+// rank of 1 -> largest element, rank of N -> smallest element
+void findRankDescending(int size, float *array, float *rank){      
+    for (int i = 0; i < size; i++) { 
+        int r = 1, s = 1; 
+          
+        for (int j = 0; j < size; j++) { 
+            if (j != i && array[j] > array[i]) 
+                r += 1; 
+                  
+            if (j != i && array[j] == array[i]) 
+                s += 1;      
+        }
+          
+        rank[i] = r + (float)(s - 1) / (float) 2;
+    } 
+}
+
 
 /*
 // a & b -> location of respective agent
