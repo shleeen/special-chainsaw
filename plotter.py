@@ -172,6 +172,31 @@ def plotContactTime():
     plt.savefig('plots/MeanContactTime.png')
 
 
+# target/final position Vs generation
+def perfectSolution():
+    gen=[]
+    target=[]
+    final_pos=[]
+    
+    csvfile = open('data/TargetFinalPos.csv', 'r') 
+    plots= csv.reader(csvfile, delimiter=',')
+    for row in plots:
+        gen.append(float(row[0]))
+        target.append(float(row[1]))
+        final_pos.append(float(row[2]))
+
+    print(len(target))
+
+    plt.figure()
+    plt.plot(gen, final_pos)
+    plt.plot(gen, target)
+
+    plt.title('target/final position Vs generation')
+    plt.xlabel('Generation')
+    plt.ylabel('Position')
+    plt.savefig('plots/FinalPosVsGeneration.png')
+
+
 def main():
     # call the plotter functions here
     meanFitvsGenerations()
@@ -180,6 +205,7 @@ def main():
     absMeanDistance()
     plotMeanFinalPosition()
     plotContactTime()
+    # perfectSolution()
 
     print("something has been plotted. :) ")
 

@@ -16,15 +16,12 @@ Agent::Agent(int neurons, int genes){
     self_pos_weight = 0.0;
     target_weight = 0.0;
     
-    // TODO: Do i need to do this, or set it all to 0
-    // c.RandomizeCircuitState(-0.5,0.5);
+    c.RandomizeCircuitState(-0.5,0.5);
+    // c.RandomizeCircuitState(0.0, 0.0);
 
-    for (int i=1; i<=neurons_count; i++){ // since 3 neurons
-        c.SetNeuronTimeConstant(i, 0.0);
-        c.SetNeuronGain(i, 1.0); //gain always fixed to 1
-        c.SetNeuronState(i, 0.0);
-    }
-
+    // for (int i=1; i<=neurons_count; i++){ // since 3 neurons
+    //     c.SetNeuronTimeConstant(i, 0.0);
+    // }
 }
 
 // Function to reset all values in the Agent object, include CTRNN parameters
@@ -51,7 +48,9 @@ void Agent::reset(){
 
 
 void Agent::resetState(){
-    c.RandomizeCircuitState(0.0, 0.0);
+    // c.RandomizeCircuitState(0.0, 0.0);
+    c.RandomizeCircuitState(-0.5,0.5);
+
 }
 
 // map values from [0,1] to [x,y]
@@ -102,8 +101,8 @@ void Agent::updateNeuronParams(float genome[GENES], int flag){
 
 
 // Run the one step of the circuit !!
-void Agent::stepAgent(double timestep){
-    c.EulerStep(timestep);
+void Agent::stepAgent(double stepSize){
+    c.EulerStep(stepSize);
 }
 
 void Agent::updateContactSensor(int value){

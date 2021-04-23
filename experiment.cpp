@@ -37,6 +37,10 @@ void diachronicTesting(Individual best){
     // draw starting position of agents
     sender.updateSelfPosition(randomNumberUniform(0.0, 0.3));
     receiver.updateSelfPosition(randomNumberUniform(0.0, 0.3));
+
+    // update sender target sensor for more accurate plots
+    sender.updateTargetSensor(abs(sender.getSelfPosition() - target));
+
     cout<<"starting pos - > "<<sender.getSelfPosition()<<" "<<receiver.getSelfPosition()<<endl;
 
     // SIMULATE THE BEES
@@ -198,9 +202,9 @@ int main(int argc, char* argv[]){
     }
     best_agent.fitness = 0.0;
 
-    //call experiments/tests
+    // call experiments/tests
     diachronicTesting(best_agent);
-    // trialedTesting(best_agent);
+    trialedTesting(best_agent);
 
     cout<<"Data written to file."<<endl;
 }
