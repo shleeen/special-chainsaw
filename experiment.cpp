@@ -11,7 +11,6 @@ const int NO_OF_TARGETS = 50; // target_max - target_min/no_of_targets => interv
 const float INTERVAL = (TARGET_MAX - TARGET_MIN) / NO_OF_TARGETS;
 const float TIMESTEP = 0.1;
 
-Plot pl;
 
 void diachronicTesting(Individual best){
     cout<<"DIACHRONIC TEST "<<endl;
@@ -21,9 +20,6 @@ void diachronicTesting(Individual best){
     
     float target = 0.8;
     cout<<" target : "<<target<<endl;
-
-    // for each target, do 50 trials
-    // for (int trials=0; trials<50; trials++){
 
     // new set of agents for each trial, params initialized to 0
     Agent sender(NEURONS, GENES);
@@ -59,8 +55,9 @@ void diachronicTesting(Individual best){
         sender.stepAgent(TIMESTEP_SIZE);
         receiver.stepAgent(TIMESTEP_SIZE);
 
-        // update location of c1 - based on motor neuron output
+        // update Sender location
         moveAgent(sender, TIMESTEP_SIZE);
+
         // clip the senderrrr
         float sender_pos = sender.getSelfPosition();
         if (sender_pos > 0.3){
@@ -70,6 +67,7 @@ void diachronicTesting(Individual best){
             sender.updateSelfPosition(0.0);
         }
 
+        // update Receiver location
         moveAgent(receiver, TIMESTEP_SIZE);
     }
 
@@ -83,6 +81,9 @@ void diachronicTesting(Individual best){
 void trialedTesting(Individual best){
     cout<<"TRIALED TESTS "<<endl;
 
+    Agent sender(NEURONS, GENES);
+    Agent receiver(NEURONS, GENES);
+
     fstream f6, f7, f9;
     f6.open("data/AbsMeanDist.csv", ios::out);
     f7.open("data/MeanFinalPosition.csv", ios::out);
@@ -95,32 +96,27 @@ void trialedTesting(Individual best){
     for (float target=TARGET_MIN; target<TARGET_MAX; target+=0.01){
         num_targets += 1;
 
-        pl.target = target;
         cout<<" target : "<<target<<endl;
 
-        float mean_dist = 0.0;
-        float mean_pos = 0.0;
+        float mean_dist = 0.0, mean_pos = 0.0;
 
-        float contact_time = 0.0;
-        float start_contact = 0.0, end_contact = 0.0;
-        float mean_contact_time = 0.0;
+        float start_contact = 0.0, end_contact = 0.0, mean_contact_time = 0.0;
 
         // for each target, do 50 trials
         for (int trials=0; trials<50; trials++){
-            // new set of agents for each trial, params initialized to 0
-            Agent sender(NEURONS, GENES);
-            Agent receiver(NEURONS, GENES);
+            // reset of agents for each trial, params initialized to 0
+            sender.reset();
+            receiver.reset();
             receiver.updateTargetSensor(-1);
 
             // set both Agents params with Best Indv's genome
-            // doesnt need to be done multiple times
+            // TODO: this doesnt need to be done multiple times
             sender.updateNeuronParams(best.genome, 1);
             receiver.updateNeuronParams(best.genome, 1);
 
             // draw starting position of agents
             sender.updateSelfPosition(randomNumberUniform(0.0, 0.3));
             receiver.updateSelfPosition(randomNumberUniform(0.0, 0.3));
-            // cout<<"starting pos - > "<<sender.getSelfPosition()<<" "<<receiver.getSelfPosition()<<endl;
 
             // SIMULATE THE BEES
             for (float time = TIMESTEP_SIZE; time <= RUN_DURATION; time += TIMESTEP_SIZE) {
@@ -142,8 +138,9 @@ void trialedTesting(Individual best){
                 sender.stepAgent(TIMESTEP_SIZE);
                 receiver.stepAgent(TIMESTEP_SIZE);
 
-                // update location of c1 - based on motor neuron output
+                // update Sender location
                 moveAgent(sender, TIMESTEP_SIZE);
+
                 // clip the senderrrr
                 float sender_pos = sender.getSelfPosition();
                 if (sender_pos > 0.3){
@@ -153,6 +150,7 @@ void trialedTesting(Individual best){
                     sender.updateSelfPosition(0.0);
                 }
                 
+                // update Receiver location
                 moveAgent(receiver, TIMESTEP_SIZE);
             }
 
@@ -166,7 +164,7 @@ void trialedTesting(Individual best){
             mean_contact_time = mean_contact_time + ((end_contact - start_contact) - mean_contact_time)/(trials+1);
 
             // check success of trial
-            if (abs(receiver.getSelfPosition() - target) < 0.05){ //then its a success
+            if (abs(receiver.getSelfPosition() - target) <= 0.05){ //then its a success
                 successful_trials += 1;
             }
 

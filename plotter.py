@@ -207,7 +207,7 @@ def main():
     plotContactTime()
     # perfectSolution()
 
-    print("something has been plotted. :) ")
+    print("Plots have been plotted. :) ")
 
 
 if __name__ == "__main__":
