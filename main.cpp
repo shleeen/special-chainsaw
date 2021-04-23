@@ -1,7 +1,5 @@
 #include "main.h"
 
-fstream fperf;
-
 /***
  ***   GA FUNCTIONS
 ***/
@@ -24,7 +22,7 @@ float calcFitnessOverTrials(float fitness_list[20]){
 
     for (int k=0; k<20; k++){
         // final_fitness += fitness_list[k] * (1.0/rank[k]);
-        final_fitness += fitness_list[k] * ((21-rank[k])/20);
+        final_fitness += (fitness_list[k] * ((21-rank[k])/20));
     }
 
     // rescale fitness to [0, 1] instead of [0, 9] ??
@@ -33,9 +31,7 @@ float calcFitnessOverTrials(float fitness_list[20]){
 }
 
 
-float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen){
-    fperf.open("data/TargetFinalPos.csv", ios::out);
-    
+float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen){    
     // change below flag based on generation count
     int flag = 1;
     // if (cur_gen < 0.1*GENERATIONS)
@@ -77,7 +73,7 @@ float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_
             sender.stepAgent(TIMESTEP_SIZE);
             receiver.stepAgent(TIMESTEP_SIZE);
 
-            // update location of c1 - based on motor neuron output
+            // move Sender based on motor neuron calc
             moveAgent(sender, TIMESTEP_SIZE);
 
             // clip the senderrrr
@@ -89,13 +85,9 @@ float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_
                 sender.updateSelfPosition(0.0);
             }
             
-            // sender.updateSelfPosition(clip(sender_pos, 0.0, 0.3));
-            
+            // move Receiver based on motor neuron calc
             moveAgent(receiver, TIMESTEP_SIZE);
         }
-
-        // plot perfect fitness/strategy        
-        fperf<<cur_gen-1<<", "<<target<<", "<<receiver.getSelfPosition()<<"\n";
 
         // update fitness of indv
         fitness_across_trials[trials] = max(0.0, 1.0 - (abs(receiver.getSelfPosition() - target)));
@@ -106,52 +98,51 @@ float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_
     // rank based fitness overall calc
     overall_fitness = calcFitnessOverTrials(fitness_across_trials);
 
-    fperf.close();
-
     return overall_fitness;
 }
 
 
-Individual selectParent(Individual population[POP_SIZE]){   
-    float rank[POP_SIZE];
-    float prob[POP_SIZE];
-    float overall[POP_SIZE];
+void selectParent(Individual population[POP_SIZE], int (&parent_index)[POP_SIZE]){   
+    float rank[POP_SIZE], prob[POP_SIZE], overall_fitness[POP_SIZE];
 
     for (int k=0; k<POP_SIZE; k++){
-        overall[k] = population[k].fitness;
+        overall_fitness[k] = population[k].fitness;
     }
 
-    // rank 1 -> best fitness
-    // rank N -> lowest fitness
-    findRankDescending(POP_SIZE, overall, rank);
+    // rank 1 -> best fitness, rank N -> lowest fitness
+    findRankDescending(POP_SIZE, overall_fitness, rank);
 
-    // TODO: Sum is not 1!?? for this (POP_SIZE - rank[i]).. but that shouldnt be tru...??
-    float Sum = 0.0; // sum of probs is 1
+    float Sum = 0.0;
     float total = 0.0;
 
     for (int i=0; i<POP_SIZE; i++){
         // Low selection pressure, from Beer
-        // prob[i] = (MAX_EXP_OFFSPRING + (2.0 - 2.0*MAX_EXP_OFFSPRING)*(((POP_SIZE - rank[i])-1.0)/(POP_SIZE-1)))/POP_SIZE;
         prob[i] = (MAX_EXP_OFFSPRING + (2.0 - 2.0*MAX_EXP_OFFSPRING)*((rank[i]-1)/(POP_SIZE-1)))/POP_SIZE;
 
         // High selection pressure
         // prob[i] = 1 / (1+rank[i]);
+        
+        // Roulette wheel selection, fitness based selection
+        // prob[i] = overall_fitness[i]/sum_fits;
 
-        Sum += prob[i];
+        Sum += prob[i]; // sum of probs should be 1
     }
-    // float r = randomNumberUniform(0, Sum);
-    float r = UniformRandom(0, Sum);
-    
-    int k = 0;
-    while (k <= POP_SIZE){
-        total += prob[k];
-        if (total >= r){
-            break;
+
+    // store index for each selected parent
+    for (int j=0; j<POP_SIZE; j++){
+        float r = UniformRandom(0.0, Sum);
+        
+        int k=0;
+        while (k <= POP_SIZE){
+            total += prob[k];
+            if (total > r){
+                break;
+            }
+            k++;
         }
-        k++;
-    }
 
-    return population[k];
+        parent_index[j] = k;
+    }
 }
 
 
@@ -193,7 +184,7 @@ void beerMutation(Individual &offspring){
   
     // update the offspring with mutation amt
     for (int i=0; i<GENES; i++){
-      offspring.genome[i] += random_muts[i]*mutation_size;
+      offspring.genome[i] += (random_muts[i]*mutation_size);
 
       // clip genes to [0,1] or [-1,1]
       if (offspring.genome[i] < 0.0){
@@ -219,7 +210,10 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
 ***/
 int main(int argc, char* argv[]){
     // set seed for all random number generation
-    // SetRandomSeed(3);
+    // SetRandomSeed(3423245648);
+
+    // To push stdout to another file
+    // freopen( "output.txt", "w", stdout );
 
     fstream fout, fmean, finalpop;
     fout.open("data/BestFitVsGeneration.csv", ios::out);
@@ -241,41 +235,48 @@ int main(int argc, char* argv[]){
     int gen = 0;
     while(gen <= GENERATIONS){
         Individual new_population[POP_SIZE];
+        int parent_index[POP_SIZE];
+
+        // get indices of all the selected parents
+        selectParent(population, parent_index);
 
         for (int i=0; i<POP_SIZE; i++) {
 
-            // pick parent from population
-            Individual parent = selectParent(population);
+            Individual parent = population[parent_index[i]];
             Individual offspring = parent; //make a copy of parent
+                
+            beerMutation(offspring); // mutate offspring, this shouldnt change the parent :)
 
-            // Individual mutated_offspring = mutateOffspring(offspring);  
-            // Individual mutated_offspring = beerMutation(offspring); 
-            beerMutation(offspring);
-            Individual mutated_offspring = offspring;
-            mutated_offspring.fitness = assessIndividual(offspring, sender, receiver, gen+1);
+            offspring.fitness = assessIndividual(offspring, sender, receiver, gen+1);
+            // parent.fitness = assessIndividual(parent, sender, receiver, gen+1);
 
-            if (mutated_offspring.fitness > parent.fitness){
-                new_population[i] = mutated_offspring;
+            if (offspring.fitness > parent.fitness){
+                new_population[i] = offspring;
             }
             else{
+                // parent.fitness = assessIndividual(parent, sender, receiver, gen+1);
                 new_population[i] = parent;
             }
         }
 
         updatePopulation(population, new_population);
         
-        // ---------------  STATS CALC ------------------
-        float sum_fit = 0.0, max_fit = 0.0;
-        int index;
+        // -----------------------  STATS CALC --------------------------
+        float sum_fit = 0.0, max_fit = 0.0, sq_diff = 0.0;
         for(int k=0; k<POP_SIZE; k++ ){
             sum_fit += population[k].fitness;
             if(population[k].fitness > max_fit){        
                 max_fit = population[k].fitness;
-                index = k;
             }
         }
+        // calculate variation and std deviation
+        float mean_fit = sum_fit/POP_SIZE;
+        for (int i=0; i<POP_SIZE; ++i){
+            sq_diff += (population[i].fitness - mean_fit)*(population[i].fitness - mean_fit);
+        }
+        float variance = sq_diff/POP_SIZE;
+        float std = sqrt(variance);
 
-        cout<<"Generation "<<gen<<" complete. "<<" Best fit = " << max_fit <<endl;
         // cout << "\n Largest fitness = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;;
         
         // write to file every x generations
@@ -288,7 +289,9 @@ int main(int argc, char* argv[]){
             fout<<gen<<", "<< max_fit <<"\n";
             fmean<<gen<<", "<< sum_fit/POP_SIZE <<"\n";
         } 
-        // ----------------------------------------------
+
+        cout<<"Generation "<<gen<<" complete. "<<" Best fit = " << max_fit <<" Mean fit = "<<sum_fit/POP_SIZE<<endl;
+        // ----------------------------------------------------------------
 
         // INC GENERATION COUNTER
         gen++;

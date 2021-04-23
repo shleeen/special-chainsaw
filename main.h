@@ -28,11 +28,6 @@ const float ALLELE_MAX = 1.0;
 const double RUN_DURATION = 300;
 const double TIMESTEP_SIZE = 0.1; // or 0.01
 
-/*
- *  Global variables
- */
-Plot p;
-
 
 /*
  * STRUCT for an Individual in population
@@ -65,7 +60,7 @@ void contactAgent(Agent &agent1, Agent &agent2);
 void moveAgent(Agent &agent, float stepSize);
 float calcFitnessOverTrials(float fitness_list[20]);
 float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen);
-Individual selectParent(Individual population[POP_SIZE]); 
+void selectParent(Individual population[POP_SIZE], int (&parent_index)[POP_SIZE]); 
 Individual mutateOffspring(Individual offspring);
 void beerMutation(Individual &offspring);
 void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP_SIZE]);
@@ -129,6 +124,15 @@ void findRankDescending(int size, float *array, float *rank){
           
         rank[i] = r + (float)(s - 1) / (float) 2;
     } 
+}
+
+
+// copies contents of struct 'old' to struct 'new' 
+void copyIndividual(Individual oldIndv, Individual &newIndv){
+    newIndv.fitness = oldIndv.fitness;
+    for (int i=0; i<GENES; ++i){
+        newIndv.genome[i] = oldIndv.genome[i];
+    }
 }
 
 
