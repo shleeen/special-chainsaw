@@ -16,12 +16,13 @@ Agent::Agent(int neurons, int genes){
     self_pos_weight = 0.0;
     target_weight = 0.0;
     
-    c.RandomizeCircuitState(-0.5,0.5);
-    // c.RandomizeCircuitState(0.0, 0.0);
+    // c.RandomizeCircuitState(-0.5,0.5);
+    c.RandomizeCircuitState(0.0, 0.0);
 
-    // for (int i=1; i<=neurons_count; i++){ // since 3 neurons
-    //     c.SetNeuronTimeConstant(i, 0.0);
-    // }
+    // since SetCircuitSize() initializes Tau to 1 by default
+    for (int i=1; i<=neurons_count; i++){
+        c.SetNeuronTimeConstant(i, 50.0);
+    }
 }
 
 // Function to reset all values in the Agent object, include CTRNN parameters
@@ -48,8 +49,8 @@ void Agent::reset(){
 
 
 void Agent::resetState(){
-    // c.RandomizeCircuitState(0.0, 0.0);
-    c.RandomizeCircuitState(-0.5,0.5);
+    c.RandomizeCircuitState(0.0, 0.0);
+    // c.RandomizeCircuitState(-0.5,0.5);
 
 }
 
@@ -60,43 +61,54 @@ void Agent::decodeGenome(float genome[GENES], float (&decoded)[GENES]){
     }
 }
 
+
+// new decode function that takes in the range that you want to map a value to
+float decode(float value, range to){
+    range from = {.min= -1.0, .max=1.0}; // this is the gene range
+
+    return to.min + ( ((to.max - to.min)/(from.max - from.min)) * value);
+}
+
+
 //decode the genome & set the agent up with the params
 void Agent::updateNeuronParams(float genome[GENES], int flag){
     float decoded[GENES];
 
     // if flag is 1, decode
-    if (flag == 1){
-        decodeGenome(genome, decoded);
-    }
-    // else don't bound the genome
-    else{
-        for (int i = 0; i<GENES; i++){
-            decoded[i] = genome[i];
+    // if (flag == 1){
+    //     decodeGenome(genome, decoded);
+    // }
+    // // else don't bound the genome
+    // else{
+    //     for (int i = 0; i<GENES; i++){
+    //         decoded[i] = genome[i];
 
-            // check lower bound of tau, clip at 0
-            if (i == 0 || i == 6 || i == 12 ){
-                if (genome[i] < 0){
-                    decoded[i] = 0.0;
-                }
-            }
-        }
-    }
+    //         // // check lower bound of tau, clip at 0
+    //         // if (i == 0 || i == 6 || i == 12 ){
+    //         //     if (genome[i] < 0){
+    //         //         decoded[i] = 0.0;
+    //         //     }
+    //         // }
+    //     }
+    // }
 
-    int offset = 0; // 3+3=6
+    int offset = 0; // 3+2=5
 
     for (int i=1; i<=neurons_count; i++){
-        c.SetNeuronTimeConstant(i, decoded[offset]);
-        c.SetNeuronBias(i, decoded[offset+1]);
+        c.SetNeuronTimeConstant(i, decode(genome[offset], TAU_RANGE));
+        c.SetNeuronBias(i, decode(genome[offset+1], BIAS_RANGE));
+        c.SetConnectionWeight(i, 1, decode(genome[offset+2], WEIGHT_RANGE));
+        c.SetConnectionWeight(i, 2, decode(genome[offset+3], WEIGHT_RANGE));
+        c.SetConnectionWeight(i, 3, decode(genome[offset+4], WEIGHT_RANGE));
+
         c.SetNeuronGain(i, 1.0); //gain always fixed to 1
-        c.SetConnectionWeight(i, 1, decoded[offset+3]);
-        c.SetConnectionWeight(i, 2, decoded[offset+4]);
-        c.SetConnectionWeight(i, 3, decoded[offset+5]);
-        offset += 6;
+
+        offset += 5;
     }
 
-    contact_weight = decoded[18];
-    self_pos_weight = decoded[19];
-    target_weight = decoded[20];
+    contact_weight = decode(genome[16], WEIGHT_RANGE);
+    self_pos_weight = decode(genome[17], WEIGHT_RANGE);
+    target_weight = decode(genome[18], WEIGHT_RANGE);
 }
 
 

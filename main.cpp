@@ -7,7 +7,7 @@ void initPopulation(Individual (&population)[POP_SIZE]){
     for (int i=0; i<POP_SIZE; i++){
         for (int j=0; j<GENES; j++){        
             // population[i].genome[j] = randomNumberUniform(0.0, 1.0);
-            population[i].genome[j] = UniformRandom(0.0, 1.0);
+            population[i].genome[j] = UniformRandom(-1.0, 1.0);
         }
         population[i].fitness = 0;
     }
@@ -74,7 +74,7 @@ float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_
             receiver.stepAgent(TIMESTEP_SIZE);
 
             // move Sender based on motor neuron calc
-            moveAgent(sender, TIMESTEP_SIZE);
+            moveAgent(sender);
 
             // clip the senderrrr
             float sender_pos = sender.getSelfPosition();
@@ -86,7 +86,7 @@ float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_
             }
             
             // move Receiver based on motor neuron calc
-            moveAgent(receiver, TIMESTEP_SIZE);
+            moveAgent(receiver);
         }
 
         // update fitness of indv
@@ -187,8 +187,8 @@ void beerMutation(Individual &offspring){
       offspring.genome[i] += (random_muts[i]*mutation_size);
 
       // clip genes to [0,1] or [-1,1]
-      if (offspring.genome[i] < 0.0){
-        offspring.genome[i] = 0.0;
+      if (offspring.genome[i] < -1.0){
+        offspring.genome[i] = -1.0;
       }
       else if (offspring.genome[i] > 1.0){
         offspring.genome[i] = 1.0;
@@ -210,7 +210,7 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
 ***/
 int main(int argc, char* argv[]){
     // set seed for all random number generation
-    // SetRandomSeed(3423245648);
+    // SetRandomSeed(12345678);
 
     // To push stdout to another file
     // freopen( "output.txt", "w", stdout );
@@ -232,10 +232,11 @@ int main(int argc, char* argv[]){
         population[i].fitness = assessIndividual(population[i], sender, receiver, 0);
     }
 
+    Individual new_population[POP_SIZE];
+    int parent_index[POP_SIZE];
+
     int gen = 0;
     while(gen <= GENERATIONS){
-        Individual new_population[POP_SIZE];
-        int parent_index[POP_SIZE];
 
         // get indices of all the selected parents
         selectParent(population, parent_index);
@@ -248,13 +249,12 @@ int main(int argc, char* argv[]){
             beerMutation(offspring); // mutate offspring, this shouldnt change the parent :)
 
             offspring.fitness = assessIndividual(offspring, sender, receiver, gen+1);
-            // parent.fitness = assessIndividual(parent, sender, receiver, gen+1);
 
-            if (offspring.fitness > parent.fitness){
+            if (offspring.fitness >= parent.fitness){
                 new_population[i] = offspring;
             }
             else{
-                // parent.fitness = assessIndividual(parent, sender, receiver, gen+1);
+                parent.fitness = assessIndividual(parent, sender, receiver, gen+1);
                 new_population[i] = parent;
             }
         }

@@ -1,5 +1,4 @@
 #include "Agent.h"
-#include "Plot.h"
 
 #include <iostream>
 #include <array>
@@ -20,10 +19,7 @@ const int GENERATIONS = 5000;
 const int POP_SIZE = 50;
 const float MAX_EXP_OFFSPRING = 1.1;
 const float MUTATION_VARIANCE = 0.2;
-// const int MIN_GEN_DECOD = 0.1*GENERATIONS;
-
-const float ALLELE_MIN = 0.0;
-const float ALLELE_MAX = 1.0;
+const int MIN_GEN_DECODE = 0.1*GENERATIONS;
 
 const double RUN_DURATION = 300;
 const double TIMESTEP_SIZE = 0.1; // or 0.01
@@ -32,9 +28,9 @@ const double TIMESTEP_SIZE = 0.1; // or 0.01
 /*
  * STRUCT for an Individual in population
  */
-// chromosome = tau1 | bias1 | gain1 | weight11 | weight12 | weight13 |
-//              tau2 | bias2 | gain2 | weight21 | weight22 | weight23 | 
-//              tau3 | bias3 | gain3 | weight31 | weight32 | weight33 |
+// chromosome = tau1 | bias1 | weight11 | weight12 | weight13 |
+//              tau2 | bias2 | weight21 | weight22 | weight23 | 
+//              tau3 | bias3 | weight31 | weight32 | weight33 |
 //              contact_weight | self-pos_weight | target_weight 
 struct Individual{
     float genome[GENES]; //aka Chromosome, Genotype
@@ -46,7 +42,7 @@ struct Individual{
  * Util Functions 
  */
 float randomNumberUniform(float start, float end);
-float randomNumberGaussian(float mean);
+float randomNumberGaussian(float mean, float variance);
 void findRankAscending(int size, float *array, float *rank);
 void findRankDescending(int size, float *array, float *rank);
 
@@ -57,7 +53,7 @@ void findRankDescending(int size, float *array, float *rank);
 void initPopulation(Individual (&population)[POP_SIZE]);
 bool checkAgentContact(float a, float b);
 void contactAgent(Agent &agent1, Agent &agent2);
-void moveAgent(Agent &agent, float stepSize);
+void moveAgent(Agent &agent);
 float calcFitnessOverTrials(float fitness_list[20]);
 float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen);
 void selectParent(Individual population[POP_SIZE], int (&parent_index)[POP_SIZE]); 
@@ -71,7 +67,7 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
  ***    HELPER FUNCTIONS
 ***/
 // Sigmoid function
-float sigma(float x){
+float sigmoid(float x){
     return 1/(1 + exp(-x));
 }
 
@@ -84,8 +80,7 @@ float randomNumberUniform(float start, float end){
 }
 
 // Generate random number from Gaussian distr
-float randomNumberGaussian(float mean){
-    float variance = 0.2;
+float randomNumberGaussian(float mean, float variance){
     std::random_device rd;
     std::mt19937 generator(rd());
     std::normal_distribution<float> distr(mean, sqrt(variance));
@@ -169,42 +164,28 @@ void contactAgent(Agent &agent1, Agent &agent2){
     }
 }
 
-// from R. Beer's TSearch library
-float clip(float x, float min, float max){
-	float temp;
-	
-	temp = ((x > min)?x:min);
-	return (temp < max)?temp:max;
-}
-
 
 // West <---- (._.) ----> East
-void moveAgent(Agent &agent, float stepSize){
+void moveAgent(Agent &agent){
     double output = agent.getOutput(1);
     float cur_location = agent.getSelfPosition();
+
+    // --- old step calulation
     // float weight = agent.getMotorWeight();
     // float step = (sigma(weight*output) - 0.5) * 0.2; // rescales to range -0.1, 0.1
 
     // rescales to range [-0.1*stepize, 0.1*stepSize]
-    float step = (sigma(output) - 0.5) * stepSize * 0.2;
+    float step = (sigma(output) - 0.5) * TIMESTEP_SIZE * 0.2;
+    // float step = (2*(output - 0.5)) * TIMESTEP_SIZE * 0.01;
+
+    // if (step > 0.01){
+    //     step = 0.01;
+    // }
+    // else if (step < -0.01){
+    //     step = 0.01;
+    // }
 
     // if step is negative, it moves west
     //                else, moves east
     agent.updateSelfPosition(cur_location + step);
-
-    // if (step < 0){
-    //     // move east
-    //     // new_location = abs(cur_location + DIST);
-    //     agent.updateSelfPosition(cur_location + step);
-    // }
-    // else if (step > 0){
-    //     // move west
-    //     // new_location = abs(cur_location - DIST);
-    //     agent.updateSelfPosition(cur_location - step);
-    // }
-    // else {
-    //     // dont move
-    //     agent.updateSelfPosition(cur_location);
-    // }
-    // agent.updateSelfPosition(new_location);
 }
