@@ -99,8 +99,8 @@ def bestFitvsGenerations():
     gen=[]
     best_fit=[]
     
-    with open('data/FitnessVsGeneration.csv', 'r') as csvfile:
-        csvfile = open('data/FitnessVsGeneration.csv', 'r') 
+    with open('data/BestFitVsGeneration.csv', 'r') as csvfile:
+        csvfile = open('data/BestFitVsGeneration.csv', 'r') 
         plots= csv.reader(csvfile, delimiter=',')
         for row in plots:
             gen.append(float(row[0]))
