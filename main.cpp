@@ -34,10 +34,6 @@ float calcFitnessOverTrials(float fitness_list[20]){
 float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen){    
     // change below flag based on generation count
     int flag = 1;
-    // if (cur_gen < 0.1*GENERATIONS)
-    //     flag = 1;
-    // else 
-    //     flag = 0;
 
     int trials = 0;
     float fitness_across_trials[20], overall_fitness = 0.0;
@@ -205,20 +201,69 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
 }
 
 
+// Calculate the 'distance'/relationship between a target individual and another genome
+// float calcDist(Individual population[POP_SIZE], int target, int genome2){
+float calcDist(Individual population[POP_SIZE], int target, Individual avg){
+    float total = 0.0, dist = 0.0;
+
+    for (int i=0; i<GENES; i++){
+        total += abs(population[target].genome[i] - avg.genome[i]);
+    }
+
+    total = ( total / GENES );
+
+    return total;
+}
+
+
+float calcFDC(float D[POP_SIZE], float F[POP_SIZE]){
+    float Fmean = 0.0, Dmean = 0.0;
+    float Fstd = 0.0, Dstd = 0.0;
+    float covarianceFD = 0.0;
+
+    // Fmean and Dmean
+    float Fsum = 0.0, Dsum = 0.0;
+    for (int j=0; j<POP_SIZE; j++){
+        Fsum += F[j];
+        Dsum += D[j];
+    }
+    Fmean = Fsum/POP_SIZE;
+    Dmean = Dsum/POP_SIZE;
+
+    // calc std and covariance of F and D
+    float Fsq_diff = 0.0, Dsq_diff = 0.0;
+    for (int j=0; j<POP_SIZE; j++){
+        // sq_diff
+        Fsq_diff += ((F[j] - Fmean)*(F[j] - Fmean));
+        Dsq_diff += ((D[j] - Dmean)*(D[j] - Dmean));
+
+        // covariance
+        covarianceFD += ((F[j] - Fmean)*(D[j] - Dmean));
+    }
+    covarianceFD = covarianceFD * (1.0/POP_SIZE);
+    Fstd = sqrt(Fsq_diff/POP_SIZE);
+    Dstd = sqrt(Dsq_diff/POP_SIZE);
+
+    return ( covarianceFD/(Fstd*Dstd) );
+}
+
+
 /***
  ***    MAIN FUNCTION
 ***/
 int main(int argc, char* argv[]){
     // set seed for all random number generation
-    // SetRandomSeed(12345678);
+    SetRandomSeed(12345678);
 
     // To push stdout to another file
     // freopen( "output.txt", "w", stdout );
 
-    fstream fout, fmean, finalpop;
+    fstream fout, fmean, finalpop, fdc, fitdiss;
     fout.open("data/BestFitVsGeneration.csv", ios::out);
     fmean.open("data/MeanFitness.csv", ios::out);
     finalpop.open("data/final_population.csv", ios::out);
+    fdc.open("data/FDC.csv", ios::out);
+    fitdiss.open("data/fitdiss.csv", ios::out);
 
     Agent sender(NEURONS, GENES); //sender
     Agent receiver(NEURONS, GENES); //receiver
@@ -234,6 +279,7 @@ int main(int argc, char* argv[]){
 
     Individual new_population[POP_SIZE];
     int parent_index[POP_SIZE];
+    float FDC = 0.0;
 
     int gen = 0;
     while(gen <= GENERATIONS){
@@ -260,7 +306,31 @@ int main(int argc, char* argv[]){
         }
 
         updatePopulation(population, new_population);
-        
+
+
+        // ----------------------- every 1000 generations calculate FDC -----------------------
+        if ( gen!=0 && gen%1000 == 0 ){             
+            Individual avg_agent;
+            averageGenomeInPop(avg_agent, population); 
+            avg_agent.fitness = assessIndividual(avg_agent, sender, receiver, 0); // update the fitness based on new genome values
+            cout<<"--- Done calculating AVG of all population"<<endl;
+
+            float distances[POP_SIZE], fitness_diff[POP_SIZE];
+
+            // for every individual in the population
+            for (int i=0; i<POP_SIZE; i++){ 
+                distances[i] = calcDist(population, i, avg_agent);
+                fitness_diff[i] = abs(population[i].fitness - avg_agent.fitness);
+                fitdiss<<gen<<", "<<distances[i]<<", "<<fitness_diff[i]<<"\n";
+            }
+
+            // calc correlation beteen the two lists
+            FDC = calcFDC(distances, fitness_diff);
+            cout<<"-------- FDC:"<<FDC<<endl;
+            fdc<<gen<<", "<<FDC<<"\n";
+        }
+        // -----------------------------------------------------------------------------------
+
         // -----------------------  STATS CALC --------------------------
         float sum_fit = 0.0, max_fit = 0.0, sq_diff = 0.0;
         for(int k=0; k<POP_SIZE; k++ ){
@@ -308,12 +378,18 @@ int main(int argc, char* argv[]){
             index = k;
         }
     }
-    cout << "\n Best fitness from final generation = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;
+    cout << "\n Best fitness from final generation = " << max_fit <<" , index: "<< index <<",  "<<population[index].fitness<<endl;
+    
+    // reassess the best agent:
+    float reassess_best_fit = 0.0;
+    reassess_best_fit = assessIndividual(population[index], sender, receiver, 6000);
+
+    cout << "\n Reassessed best fitness = " << reassess_best_fit <<endl;
 
     // Save genome of best agent in a file.
     fstream agent_file;
     agent_file.open("data/Agent.csv", ios::out);
-    cout<<"BEST AGENT: "<<endl;
+    cout<<"\nBEST AGENT: "<<endl;
     for (int i=0; i<GENES; i++){
         cout<<population[index].genome[i]<<endl;
         agent_file<<population[index].genome[i]<<"\n";
@@ -335,6 +411,8 @@ int main(int argc, char* argv[]){
     fout.close();
     fmean.close();
     agent_file.close();
+    fdc.close();
+    fitdiss.close();
 
     cout<<"Everything written to file!!"<<endl;
 

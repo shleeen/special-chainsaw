@@ -20,9 +20,9 @@ Agent::Agent(int neurons, int genes){
     c.RandomizeCircuitState(0.0, 0.0);
 
     // since SetCircuitSize() initializes Tau to 1 by default
-    for (int i=1; i<=neurons_count; i++){
-        c.SetNeuronTimeConstant(i, 50.0);
-    }
+    // for (int i=1; i<=neurons_count; i++){
+    //     c.SetNeuronTimeConstant(i, 50.0);
+    // }
 }
 
 // Function to reset all values in the Agent object, include CTRNN parameters
@@ -51,7 +51,6 @@ void Agent::reset(){
 void Agent::resetState(){
     c.RandomizeCircuitState(0.0, 0.0);
     // c.RandomizeCircuitState(-0.5,0.5);
-
 }
 
 // map values from [0,1] to [x,y]
@@ -72,7 +71,7 @@ float decode(float value, range to){
 
 //decode the genome & set the agent up with the params
 void Agent::updateNeuronParams(float genome[GENES], int flag){
-    float decoded[GENES];
+    // float decoded[GENES];
 
     // if flag is 1, decode
     // if (flag == 1){

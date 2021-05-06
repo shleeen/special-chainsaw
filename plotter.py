@@ -197,6 +197,64 @@ def perfectSolution():
     plt.savefig('plots/FinalPosVsGeneration.png')
 
 
+# Plot the fitness distance correlation vs generation
+def plotFDC():
+    gen=[]
+    fdc=[]
+
+    csvfile = open('data/FDC.csv', 'r') 
+    plots= csv.reader(csvfile, delimiter=',')
+
+    for row in plots:
+        gen.append(float(row[0]))
+        fdc.append(float(row[1]))
+
+    plt.figure()
+    plt.plot(gen, fdc)
+    
+    plt.title('Fitness-Distance Correlation across generations')
+    plt.xlabel('Generation')
+    plt.ylabel('FDC value')
+    plt.savefig('plots/FDCVsGEN.png')
+
+
+def plotFitDis():
+    gen=[]
+    dist=[]
+    fitness=[]
+
+    csvfile = open('data/fitdiss.csv', 'r') 
+    filereader= csv.reader(csvfile, delimiter=',')
+
+    count = 0
+
+    # for every row in file
+    for row in filereader:
+        gen.append(float(row[0]))
+        dist.append(float(row[1]))
+        fitness.append(float(row[2]))
+
+        count = count + 1
+
+        if count == 50:
+            # plot the 50 readings
+            plt.figure()
+            plt.scatter(dist, fitness)
+            
+            plt.title('Fitness-Distance scatter for gen: '+ str(gen[0]))
+            plt.xlabel('Distance measure')
+            plt.ylabel('Fitness difference')
+            plt.savefig('plots/fitdiss'+ str(gen[0]) +'.png')
+
+            # reset the lists
+            gen=[]
+            dist=[]
+            fitness=[]
+            count = 0
+
+
+
+
 def main():
     # call the plotter functions here
     meanFitvsGenerations()
@@ -206,6 +264,8 @@ def main():
     plotMeanFinalPosition()
     plotContactTime()
     # perfectSolution()
+    plotFDC()
+    plotFitDis()
 
     print("Plots have been plotted. :) ")
 

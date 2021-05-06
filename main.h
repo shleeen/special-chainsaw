@@ -131,6 +131,17 @@ void copyIndividual(Individual oldIndv, Individual &newIndv){
 }
 
 
+// calc avg for each gene in a genome, across all individuals in the population
+void averageGenomeInPop(Individual &avg, Individual population[POP_SIZE]){
+    for(int i=0; i<GENES; i++){
+        float sum=0.0;
+        for(int j=0; j<POP_SIZE; j++){
+            sum += population[j].genome[i];
+        }
+        avg.genome[i] = (sum/POP_SIZE);
+    }
+}
+
 /*
 // a & b -> location of respective agent
 bool checkAgentContact(float a, float b){
@@ -175,15 +186,9 @@ void moveAgent(Agent &agent){
     // float step = (sigma(weight*output) - 0.5) * 0.2; // rescales to range -0.1, 0.1
 
     // rescales to range [-0.1*stepize, 0.1*stepSize]
-    float step = (sigma(output) - 0.5) * TIMESTEP_SIZE * 0.2;
-    // float step = (2*(output - 0.5)) * TIMESTEP_SIZE * 0.01;
-
-    // if (step > 0.01){
-    //     step = 0.01;
-    // }
-    // else if (step < -0.01){
-    //     step = 0.01;
-    // }
+    // float step = (sigma(output) - 0.5) * TIMESTEP_SIZE * 0.2;
+    float step = (2*(output - 0.5)) * TIMESTEP_SIZE * 0.1;
+    // float step = (2 * (output - 0.5)) * TIMESTEP_SIZE * 0.01;
 
     // if step is negative, it moves west
     //                else, moves east
