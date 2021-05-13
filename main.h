@@ -18,8 +18,7 @@ const int NEURONS = 3;
 const int GENERATIONS = 5000;
 const int POP_SIZE = 50;
 const float MAX_EXP_OFFSPRING = 1.1;
-const float MUTATION_VARIANCE = 0.2;
-const int MIN_GEN_DECODE = 0.1*GENERATIONS;
+const float MUTATION_VARIANCE = 0.4;
 
 const double RUN_DURATION = 300;
 const double TIMESTEP_SIZE = 0.1; // or 0.01
@@ -55,7 +54,7 @@ bool checkAgentContact(float a, float b);
 void contactAgent(Agent &agent1, Agent &agent2);
 void moveAgent(Agent &agent);
 float calcFitnessOverTrials(float fitness_list[20]);
-float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen);
+float assessIndividual(Individual indv, Agent &sender, Agent &receiver);
 void selectParent(Individual population[POP_SIZE], int (&parent_index)[POP_SIZE]); 
 Individual mutateOffspring(Individual offspring);
 void beerMutation(Individual &offspring);
@@ -174,16 +173,11 @@ void moveAgent(Agent &agent){
     // float weight = agent.getMotorWeight();
     // float step = (sigma(weight*output) - 0.5) * 0.2; // rescales to range -0.1, 0.1
 
+    // the incorrect option, but it works??
+    // float step = (sigma(output) - 0.5) * TIMESTEP_SIZE * 0.2;
+    
     // rescales to range [-0.1*stepize, 0.1*stepSize]
-    float step = (sigma(output) - 0.5) * TIMESTEP_SIZE * 0.2;
-    // float step = (2*(output - 0.5)) * TIMESTEP_SIZE * 0.01;
-
-    // if (step > 0.01){
-    //     step = 0.01;
-    // }
-    // else if (step < -0.01){
-    //     step = 0.01;
-    // }
+    float step = (2*(output - 0.5)) * TIMESTEP_SIZE * 0.01; 
 
     // if step is negative, it moves west
     //                else, moves east

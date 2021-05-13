@@ -18,11 +18,13 @@ void initPopulation(Individual (&population)[POP_SIZE]){
 float calcFitnessOverTrials(float fitness_list[20]){
     float final_fitness = 0.0;
     float rank[20];
-    findRankAscending(20, fitness_list, rank);
+    // findRankAscending(20, fitness_list, rank);
+    std::sort(fitness_list, fitness_list + 20, std::less<float>());
 
     for (int k=0; k<20; k++){
         // final_fitness += fitness_list[k] * (1.0/rank[k]);
-        final_fitness += (fitness_list[k] * ((21-rank[k])/20));
+        final_fitness += (fitness_list[k] * (1.0/(k+1)));
+        // final_fitness += (fitness_list[k] * ((21-rank[k])/20));
     }
 
     // rescale fitness to [0, 1] instead of [0, 9] ??
@@ -31,13 +33,9 @@ float calcFitnessOverTrials(float fitness_list[20]){
 }
 
 
-float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_gen){    
+float assessIndividual(Individual indv, Agent &sender, Agent &receiver){    
     // change below flag based on generation count
     int flag = 1;
-    // if (cur_gen < 0.1*GENERATIONS)
-    //     flag = 1;
-    // else 
-    //     flag = 0;
 
     int trials = 0;
     float fitness_across_trials[20], overall_fitness = 0.0;
@@ -46,6 +44,7 @@ float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_
         // reset Agent object
         sender.resetState();
         receiver.resetState();
+        // note: this sets the target sensor to 0, but the sensor*weight = 0 here
         receiver.updateTargetSensor(-1); //target sensor value for receiver is fixed
 
         // set Agent params according to the genome
@@ -68,6 +67,7 @@ float assessIndividual(Individual indv, Agent &sender, Agent &receiver, int cur_
             // update relative dist to target
             float dist_to_target = abs(sender.getSelfPosition() - target);
             sender.updateTargetSensor(dist_to_target);
+            receiver.updateTargetSensor(-1); // to update sensor*weight value
 
             // perform calc for one timestep
             sender.stepAgent(TIMESTEP_SIZE);
@@ -110,14 +110,16 @@ void selectParent(Individual population[POP_SIZE], int (&parent_index)[POP_SIZE]
     }
 
     // rank 1 -> best fitness, rank N -> lowest fitness
-    findRankDescending(POP_SIZE, overall_fitness, rank);
+    // findRankDescending(POP_SIZE, overall_fitness, rank);
+    std::sort(overall_fitness, overall_fitness + POP_SIZE, std::greater<float>());
 
     float Sum = 0.0;
     float total = 0.0;
 
     for (int i=0; i<POP_SIZE; i++){
         // Low selection pressure, from Beer
-        prob[i] = (MAX_EXP_OFFSPRING + (2.0 - 2.0*MAX_EXP_OFFSPRING)*((rank[i]-1)/(POP_SIZE-1)))/POP_SIZE;
+        // prob[i] = (MAX_EXP_OFFSPRING + (2.0 - 2.0*MAX_EXP_OFFSPRING)*((rank[i]-1)/(POP_SIZE-1)))/POP_SIZE;
+        prob[i] = (MAX_EXP_OFFSPRING + (2.0 - 2.0*MAX_EXP_OFFSPRING)*((i-1)/(POP_SIZE-1)))/POP_SIZE;
 
         // High selection pressure
         // prob[i] = 1 / (1+rank[i]);
@@ -210,7 +212,7 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
 ***/
 int main(int argc, char* argv[]){
     // set seed for all random number generation
-    // SetRandomSeed(12345678);
+    SetRandomSeed(32566967);
 
     // To push stdout to another file
     // freopen( "output.txt", "w", stdout );
@@ -229,11 +231,12 @@ int main(int argc, char* argv[]){
     
     // assess population
     for (int i=0; i<POP_SIZE; i++){
-        population[i].fitness = assessIndividual(population[i], sender, receiver, 0);
+        population[i].fitness = assessIndividual(population[i], sender, receiver);
     }
 
     Individual new_population[POP_SIZE];
     int parent_index[POP_SIZE];
+    Individual overall_best = population[0]; // best indv across all gens
 
     int gen = 0;
     while(gen <= GENERATIONS){
@@ -248,13 +251,13 @@ int main(int argc, char* argv[]){
                 
             beerMutation(offspring); // mutate offspring, this shouldnt change the parent :)
 
-            offspring.fitness = assessIndividual(offspring, sender, receiver, gen+1);
+            offspring.fitness = assessIndividual(offspring, sender, receiver);
 
             if (offspring.fitness >= parent.fitness){
                 new_population[i] = offspring;
             }
             else{
-                parent.fitness = assessIndividual(parent, sender, receiver, gen+1);
+                // parent.fitness = assessIndividual(parent, sender, receiver);
                 new_population[i] = parent;
             }
         }
@@ -263,10 +266,12 @@ int main(int argc, char* argv[]){
         
         // -----------------------  STATS CALC --------------------------
         float sum_fit = 0.0, max_fit = 0.0, sq_diff = 0.0;
+        int best_index = 0;
         for(int k=0; k<POP_SIZE; k++ ){
             sum_fit += population[k].fitness;
             if(population[k].fitness > max_fit){        
                 max_fit = population[k].fitness;
+                best_index = k;
             }
         }
         // calculate variation and std deviation
@@ -293,6 +298,11 @@ int main(int argc, char* argv[]){
         cout<<"Generation "<<gen<<" complete. "<<" Best fit = " << max_fit <<" Mean fit = "<<sum_fit/POP_SIZE<<endl;
         // ----------------------------------------------------------------
 
+        // update overall best agent across entire evolution
+        if (max_fit > overall_best.fitness){
+            overall_best = population[best_index];
+        }
+
         // INC GENERATION COUNTER
         gen++;
     }
@@ -309,14 +319,17 @@ int main(int argc, char* argv[]){
         }
     }
     cout << "\n Best fitness from final generation = " << max_fit <<" index: "<< index <<" "<<population[index].fitness<<endl;
+    cout<< "The overall best agent across entire evolution = "<<overall_best.fitness<<endl;
 
     // Save genome of best agent in a file.
-    fstream agent_file;
+    fstream agent_file, overall_best_file;
     agent_file.open("data/Agent.csv", ios::out);
+    overall_best_file.open("data/OverallBestAgent.csv", ios::out);
     cout<<"BEST AGENT: "<<endl;
     for (int i=0; i<GENES; i++){
         cout<<population[index].genome[i]<<endl;
         agent_file<<population[index].genome[i]<<"\n";
+        overall_best_file<<overall_best.genome[i]<<"\n";
     }
 
     // Save final population genotype
@@ -335,6 +348,7 @@ int main(int argc, char* argv[]){
     fout.close();
     fmean.close();
     agent_file.close();
+    overall_best_file.close();
 
     cout<<"Everything written to file!!"<<endl;
 

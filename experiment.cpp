@@ -7,9 +7,8 @@
 const int TRIALS = 50;
 const float TARGET_MIN = 0.5; 
 const float TARGET_MAX = 1.0;
-const int NO_OF_TARGETS = 50; // target_max - target_min/no_of_targets => interval between points selected
-const float INTERVAL = (TARGET_MAX - TARGET_MIN) / NO_OF_TARGETS;
-const float TIMESTEP = 0.1;
+// const int NO_OF_TARGETS = 50; // target_max - target_min/no_of_targets => interval between points selected
+// const float INTERVAL = (TARGET_MAX - TARGET_MIN) / NO_OF_TARGETS;
 
 
 void diachronicTesting(Individual best){
@@ -31,8 +30,8 @@ void diachronicTesting(Individual best){
     receiver.updateNeuronParams(best.genome, 1);
 
     // draw starting position of agents
-    sender.updateSelfPosition(randomNumberUniform(0.0, 0.3));
-    receiver.updateSelfPosition(randomNumberUniform(0.0, 0.3));
+    sender.updateSelfPosition(UniformRandom(0.0, 0.3));
+    receiver.updateSelfPosition(UniformRandom(0.0, 0.3));
 
     // update sender target sensor for more accurate plots
     sender.updateTargetSensor(abs(sender.getSelfPosition() - target));
@@ -50,14 +49,15 @@ void diachronicTesting(Individual best){
         // update relative dist to target
         float dist_to_target = abs(sender.getSelfPosition() - target);
         sender.updateTargetSensor(dist_to_target);
+        receiver.updateTargetSensor(-1);
 
         // perform calc for one timestep
         sender.stepAgent(TIMESTEP_SIZE);
         receiver.stepAgent(TIMESTEP_SIZE);
 
-        // update Sender location
-        moveAgent(sender, TIMESTEP_SIZE);
-
+        // update location of c1 - based on motor neuron output
+        moveAgent(sender);
+        
         // clip the senderrrr
         float sender_pos = sender.getSelfPosition();
         if (sender_pos > 0.3){
@@ -67,8 +67,7 @@ void diachronicTesting(Individual best){
             sender.updateSelfPosition(0.0);
         }
 
-        // update Receiver location
-        moveAgent(receiver, TIMESTEP_SIZE);
+        moveAgent(receiver);
     }
 
     // close file
@@ -92,31 +91,38 @@ void trialedTesting(Individual best){
     int successful_trials = 0; //counter for counting # of successes
     int num_targets = 0;
     
+    // set the first target
+    float target = TARGET_MIN;
+
     // <= TARGET_MAX gives 51 different targets to test against, rather than 50
-    for (float target=TARGET_MIN; target<TARGET_MAX; target+=0.01){
+    for (float i=0; i<50; i++){
         num_targets += 1;
 
-        cout<<" target : "<<target<<endl;
+        target += 0.01;
+        // cout<<" target : "<<target<<endl;
 
         float mean_dist = 0.0, mean_pos = 0.0;
 
-        float start_contact = 0.0, end_contact = 0.0, mean_contact_time = 0.0;
+        float start_contact = 0.0, end_contact = 0.0;
+        float mean_contact_time = 0.0;
 
         // for each target, do 50 trials
         for (int trials=0; trials<50; trials++){
-            // reset of agents for each trial, params initialized to 0
-            sender.reset();
-            receiver.reset();
+            // new set of agents for each trial, params initialized to 0
+            // Agent sender(NEURONS, GENES);
+            // Agent receiver(NEURONS, GENES);
+            sender.resetState();
+            receiver.resetState();
             receiver.updateTargetSensor(-1);
 
             // set both Agents params with Best Indv's genome
-            // TODO: this doesnt need to be done multiple times
+            // doesnt need to be done multiple times
             sender.updateNeuronParams(best.genome, 1);
             receiver.updateNeuronParams(best.genome, 1);
 
             // draw starting position of agents
-            sender.updateSelfPosition(randomNumberUniform(0.0, 0.3));
-            receiver.updateSelfPosition(randomNumberUniform(0.0, 0.3));
+            sender.updateSelfPosition(UniformRandom(0.0, 0.3));
+            receiver.updateSelfPosition(UniformRandom(0.0, 0.3));
 
             // SIMULATE THE BEES
             for (float time = TIMESTEP_SIZE; time <= RUN_DURATION; time += TIMESTEP_SIZE) {
@@ -133,14 +139,15 @@ void trialedTesting(Individual best){
                 // update relative dist to target
                 float dist_to_target = abs(sender.getSelfPosition() - target);
                 sender.updateTargetSensor(dist_to_target);
+                receiver.updateTargetSensor(-1);
 
                 // perform calc for one timestep
                 sender.stepAgent(TIMESTEP_SIZE);
                 receiver.stepAgent(TIMESTEP_SIZE);
 
-                // update Sender location
-                moveAgent(sender, TIMESTEP_SIZE);
-
+                // update location of c1 - based on motor neuron output
+                moveAgent(sender);
+                
                 // clip the senderrrr
                 float sender_pos = sender.getSelfPosition();
                 if (sender_pos > 0.3){
@@ -150,11 +157,8 @@ void trialedTesting(Individual best){
                     sender.updateSelfPosition(0.0);
                 }
                 
-                // update Receiver location
-                moveAgent(receiver, TIMESTEP_SIZE);
+                moveAgent(receiver);
             }
-
-            // fitness_across_trials[trials] = 1 - (abs(bee2.getSelfPosition() - target));
 
             float next_dist = receiver.getSelfPosition() - target;
             mean_dist = mean_dist + (next_dist - mean_dist)/(trials+1);
@@ -189,12 +193,13 @@ void trialedTesting(Individual best){
 
 
 int main(int argc, char* argv[]){
+    SetRandomSeed(5496974);
+
     // open file
     fstream myFile("data/Agent.csv", ios::in);
     Individual best_agent;
     string line;
     for(int i=0; i<GENES; i++){
-        // cout<<line<<" "<<endl;
         getline(myFile, line); //get one line from file
         best_agent.genome[i] = stof(line); //save value as float into Indv
     }
@@ -203,6 +208,21 @@ int main(int argc, char* argv[]){
     // call experiments/tests
     diachronicTesting(best_agent);
     trialedTesting(best_agent);
+
+    // -------------------------------------------------------------------
+    cout<<"-------- OVERALL BEST AGENT --------\n";
+
+    fstream overall("data/OverallBestAgent.csv", ios::in);
+    Individual best_overall;
+    string line2;
+    for(int i=0; i<GENES; i++){
+        getline(overall, line2); //get one line from file
+        best_overall.genome[i] = stof(line2); //save value as float into Indv
+    }
+
+    // call experiments/tests
+    diachronicTesting(best_overall);
+    trialedTesting(best_overall);
 
     cout<<"Data written to file."<<endl;
 }
