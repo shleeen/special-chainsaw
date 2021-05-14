@@ -61,7 +61,7 @@ def plotDiachronic():
     plt.ylabel('Sender\'s Sensor Value')
     plt.ylim(-1.5, 2)
 
-    plt.tight_layout(pad=0.4, w_pad=0.5, h_pad=1.0)
+    plt.tight_layout()
     # plt.show()
 
     plt.savefig('plots/diachronic_plots.png')
@@ -127,6 +127,7 @@ def absMeanDistance():
 
     plt.figure()
     plt.plot(target, mean_dist, marker='o')
+    plt.grid()
 
     plt.title('Absolute mean distance vs Target position')
     plt.xlabel('Target Position')
@@ -145,7 +146,10 @@ def plotMeanFinalPosition():
         mean_pos.append(float(row[1]))
 
     plt.figure()
-    plt.plot(target, mean_pos, marker='o')
+    plt.plot(target, target, marker='o', label='Perfect fitness', color='tab:orange')
+    plt.plot(target, mean_pos, marker='o', label='Average fitness', color='tab:blue')
+    plt.grid()
+    plt.legend()
 
     plt.title('Mean Final Position vs Target position')
     plt.xlabel('Target Position')
@@ -165,6 +169,7 @@ def plotContactTime():
 
     plt.figure()
     plt.plot(target, mean_contact_time, marker='o')
+    plt.grid()
 
     plt.title('Mean Contact Time vs Target position')
     plt.xlabel('Target Position')

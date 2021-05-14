@@ -2,15 +2,15 @@
 
 #include "main.h"
 #include <string>
+#include <vector>
 
 // global constants
 const int TRIALS = 50;
 const float TARGET_MIN = 0.5; 
 const float TARGET_MAX = 1.0;
-// const int NO_OF_TARGETS = 50; // target_max - target_min/no_of_targets => interval between points selected
-// const float INTERVAL = (TARGET_MAX - TARGET_MIN) / NO_OF_TARGETS;
 
 
+// Function to plot a diachronic look at behaviour of best agent for a single target.
 void diachronicTesting(Individual best){
     cout<<"DIACHRONIC TEST "<<endl;
 
@@ -77,6 +77,7 @@ void diachronicTesting(Individual best){
 }
 
 
+// Function to run multiple trials on the best agent.
 void trialedTesting(Individual best){
     cout<<"TRIALED TESTS "<<endl;
 
@@ -90,6 +91,7 @@ void trialedTesting(Individual best){
 
     int successful_trials = 0; //counter for counting # of successes
     int num_targets = 0;
+    vector<float> final_dists_trials;
     
     // set the first target
     float target = TARGET_MIN;
@@ -160,12 +162,14 @@ void trialedTesting(Individual best){
                 moveAgent(receiver);
             }
 
-            float next_dist = receiver.getSelfPosition() - target;
+            float next_dist = abs(receiver.getSelfPosition() - target);
             mean_dist = mean_dist + (next_dist - mean_dist)/(trials+1);
 
             mean_pos = mean_pos + (receiver.getSelfPosition() - mean_pos)/(trials+1);
 
             mean_contact_time = mean_contact_time + ((end_contact - start_contact) - mean_contact_time)/(trials+1);
+
+            final_dists_trials.push_back(next_dist); //keep track of all the final distances of receiver
 
             // check success of trial
             if (abs(receiver.getSelfPosition() - target) <= 0.05){ //then its a success
@@ -174,9 +178,9 @@ void trialedTesting(Individual best){
 
         } //end of trials While
 
-        f6<< target << ", " << abs(mean_dist) <<"\n";   
+        f6<< target << ", " << mean_dist <<"\n";   
         f7<< target << ", " << mean_pos <<"\n";
-        f9<< target << ", " << mean_contact_time <<"\n";
+        f9<< target << ", " << abs(mean_contact_time) <<"\n";
 
     } //end of Targets While
 
@@ -188,12 +192,28 @@ void trialedTesting(Individual best){
     cout<<"50 trials complete for "<<num_targets<<" targets."<<endl;
     cout<<"Success --> "<<success_rate<<" "<<success_rate*100<<endl;
     cout<<"-------------------------------------------- \n";
+
+    // calculating mean and std of the dist b/w receiver final pos and target, over ALL the trials
+    float total = 0.0, sum_sq = 0.0;
+    int total_trials = final_dists_trials.size();
+    for (int k=0; k<total_trials; k++){
+        total += final_dists_trials[k];
+    }
+    float abs_mean = total/total_trials;
+    for (int k=0; k<total_trials; k++){
+        sum_sq += ( (final_dists_trials[k] - abs_mean)*(final_dists_trials[k] - abs_mean) );
+    }
+    float std = sqrt(sum_sq/total_trials);
+
+    cout<<"Absolute mean distance of 2500 trials: "<<abs_mean<<endl;
+    cout<<"Standard deviation of 2500 trials: "<<std<<endl;
+    cout<<"-------------------------------------------- \n";
 }
 
 
 
 int main(int argc, char* argv[]){
-    SetRandomSeed(5496974);
+    SetRandomSeed(281745);
 
     // open file
     fstream myFile("data/Agent.csv", ios::in);
