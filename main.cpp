@@ -91,7 +91,8 @@ float assessIndividual(Individual indv, Agent &sender, Agent &receiver){
 
         // update fitness of indv
         fitness_across_trials[trials] = max(0.0, 1.0 - (abs(receiver.getSelfPosition() - target)));
-                
+        // fitness_across_trials[trials] = max(0.0, 1.0 - (abs(receiver.getSelfPosition() - 0.8)));
+
         trials++;
     }
 
@@ -212,7 +213,7 @@ void updatePopulation(Individual (&population)[POP_SIZE], Individual new_pop[POP
 ***/
 int main(int argc, char* argv[]){
     // set seed for all random number generation
-    SetRandomSeed(32566967);
+    SetRandomSeed(3275693);
 
     // To push stdout to another file
     // freopen( "output.txt", "w", stdout );

@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import csv
+import numpy as np
+import scipy.stats as st
 
 def plotDiachronic():
     plt.rcParams["figure.figsize"] = (15, 5)
@@ -28,7 +30,7 @@ def plotDiachronic():
         r_target.append(float(row[7]))
 
     f1 = plt.figure()
-    plt.suptitle('Target = 0.8 ')
+    plt.suptitle('Target = '+ str(target[0]))
     #plot 1: OVERALL
     plt.subplot(1, 3, 1)
     plt.plot(time, s_pos, label="sender")
@@ -146,10 +148,7 @@ def plotMeanFinalPosition():
         mean_pos.append(float(row[1]))
 
     plt.figure()
-    plt.plot(target, target, marker='o', label='Perfect fitness', color='tab:orange')
-    plt.plot(target, mean_pos, marker='o', label='Average fitness', color='tab:blue')
-    plt.grid()
-    plt.legend()
+    plt.hist(mean_pos, density=False)  # density=False would make counts
 
     plt.title('Mean Final Position vs Target position')
     plt.xlabel('Target Position')
@@ -202,6 +201,38 @@ def perfectSolution():
     plt.savefig('plots/FinalPosVsGeneration.png')
 
 
+def plotMeanFinalPos_SimpleTask():
+    target=[]
+    mean_pos=[]
+
+    csvfile = open('MeanFinalPosition.csv', 'r')
+    plots= csv.reader(csvfile, delimiter=',')
+    for row in plots:
+        target.append(float(row[0]))
+        mean_pos.append(float(row[1]))
+
+    plt.figure()
+
+    # line plot
+    # plt.ylim(0.50, 0.90)
+    # plt.plot(num, mean_pos, marker='o')
+    # # plt.axhspan(0.75, 0.85, color='tab:blue', alpha=0.1)
+    # plt.title('Mean Final Position for each trial')
+    # plt.xlabel('# of Trial')
+    # plt.ylabel('Mean final position')
+
+    # histogram
+    plt.xlim(0.55, 0.85)
+    binwidth = 0.0255
+    plt.hist(mean_pos, bins=np.arange(0.55, 0.85+binwidth, binwidth))  # density=False would make counts
+    plt.axvspan(0.75, 0.85, color='tab:blue', alpha=0.2)
+    plt.title('Mean final position of 50 different starting positions')
+    plt.xlabel('Mean final position')
+    plt.ylabel('Frequency')
+
+    plt.savefig('plots/MeanFinalPos_simpletask_100%.png')
+
+
 def main():
     # call the plotter functions here
     meanFitvsGenerations()
@@ -211,6 +242,7 @@ def main():
     plotMeanFinalPosition()
     plotContactTime()
     # perfectSolution()
+    # plotMeanFinalPos_SimpleTask()
 
     print("Plots have been plotted. :) ")
 
