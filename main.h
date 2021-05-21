@@ -86,6 +86,8 @@ float randomNumberGaussian(float mean, float variance){
     return distr(generator);
 }
 
+
+// Adapted from:  https://www.geeksforgeeks.org/rank-elements-array/
 // rank of 1 -> smallest element, rank of N -> largest element
 void findRankAscending(int size, float *array, float *rank){      
     for (int i = 0; i < size; i++) { 
@@ -103,6 +105,7 @@ void findRankAscending(int size, float *array, float *rank){
     } 
 }
 
+// Adapted from:  https://www.geeksforgeeks.org/rank-elements-array/
 // rank of 1 -> largest element, rank of N -> smallest element
 void findRankDescending(int size, float *array, float *rank){      
     for (int i = 0; i < size; i++) { 

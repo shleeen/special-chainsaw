@@ -30,8 +30,6 @@ void Agent::reset(){
     //sets all the internal CTRNN params to 0
     c.SetCircuitSize(neurons_count);
 
-    // c.RandomizeCircuitState(-0.5, 0.5);
-
     self_position = 0.0;
     contact_sensor = 0.0;
     target_sensor = 0.0;
@@ -69,7 +67,8 @@ float decode(float value, range to){
     return to.min + ( ((to.max - to.min)/(from.max - from.min)) * value);
 }
 
-// adapted from Beer's TSearch
+
+// adapted from Beer's TSearch class
 // maps the search params -> model/CTRNN params
 float MapSearchParameter(double x, double min, double max, double clipmin = -1.0e99, double clipmax = 1.0e99){
     range from = {.min=-1.0, .max=1.0}; // this is the gene range

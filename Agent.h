@@ -21,7 +21,7 @@ const range BIAS_RANGE = {.min = -16.0, .max = 16.0 };
 const range WEIGHT_RANGE = {.min = -16.0, .max = 16.0 };
 
 class Agent {
-    // TODO: make this public to print the CTRNN
+    // make this public to print the CTRNN
     private:
         CTRNN c;
         int neurons_count;
@@ -54,7 +54,6 @@ class Agent {
         float getTargetSensor();
         double getState(int index);
         double getOutput(int index);
-        // CTRNN getCTRNN(){return c;}
 
         void stepAgent(double timestep);
 
